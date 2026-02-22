@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employer Dashboard - IRIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">IRIS</div>
+      <nav class="sidebar-nav">
+        <a class="active" href="dashboard-employer.html">Dashboard</a>
+        <a href="#createJobSection">Create Job</a>
+        <a href="#jobsSection">My Jobs</a>
+        <a href="#applicantsSection">Applicants</a>
+        <a href="#analyticsSection">Analytics</a>
+      </nav>
+      <button id="logoutBtn" class="btn btn-secondary full-width" type="button">Logout</button>
+    </aside>
+
+    <div class="main-panel">
+      <header class="topbar">
+        <h1>Employer Workspace</h1>
+        <p id="welcomeText" class="muted"></p>
+      </header>
+
+      <main class="content">
+        <div id="globalMessage" class="alert hidden"></div>
+
+        <section id="analyticsSection" class="stats-grid">
+          <article class="glass-card stat-card">
+            <p class="stat-label">My Open Jobs</p>
+            <h3 id="employerJobCount">0</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Applicants (Selected Job)</p>
+            <h3 id="employerApplicantCount">0</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Avg Match (Selected Job)</p>
+            <h3 id="employerAvgMatch">0%</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Hiring Status</p>
+            <h3>In Progress</h3>
+          </article>
+        </section>
+
+        <section class="glass-card section-card dual-col">
+          <div class="chart-wrap">
+            <canvas id="employerJobsChart"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="employerApplicantsChart"></canvas>
+          </div>
+        </section>
+
+        <section id="createJobSection" class="glass-card section-card">
+          <div class="section-head">
+            <h2>Create Job</h2>
+          </div>
+          <form id="createJobForm" class="grid-form">
+            <div>
+              <label for="title">Title</label>
+              <input id="title" type="text" required>
+            </div>
+            <div>
+              <label for="location">Location</label>
+              <input id="location" type="text" required>
+            </div>
+            <div class="full-row">
+              <label for="description">Description</label>
+              <textarea id="description" rows="4" required></textarea>
+            </div>
+            <div class="full-row">
+              <label for="requiredSkills">Required Skills (comma separated)</label>
+              <input id="requiredSkills" type="text" placeholder="python, flask, mysql" required>
+            </div>
+            <div class="full-row">
+              <button class="btn btn-primary" type="submit">Create Job</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="jobsSection" class="section-card">
+          <div class="section-head">
+            <h2>My Jobs</h2>
+          </div>
+          <div id="employerJobsContainer" class="job-grid"></div>
+        </section>
+
+        <section id="applicantsSection" class="glass-card section-card">
+          <div class="section-head">
+            <h2>Applicants</h2>
+            <p id="selectedJobLabel" class="muted">Select a job to view applicants.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Match %</th>
+                  <th>Status</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody id="applicantsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard-ui.js"></script>
+  <script src="js/employer.js"></script>
+</body>
+</html>

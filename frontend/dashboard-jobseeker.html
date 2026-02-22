@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobseeker Dashboard - IRIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">IRIS</div>
+      <nav class="sidebar-nav">
+        <a class="active" href="dashboard-jobseeker.html">Dashboard</a>
+        <a href="#resumeSection">Upload Resume</a>
+        <a href="#jobsSection">View Jobs</a>
+        <a href="#recommendedSection">Recommended Jobs</a>
+        <a href="#applicationsSection">My Applications</a>
+      </nav>
+      <button id="logoutBtn" class="btn btn-secondary full-width" type="button">Logout</button>
+    </aside>
+
+    <div class="main-panel">
+      <header class="topbar">
+        <h1>Jobseeker Workspace</h1>
+        <p id="welcomeText" class="muted"></p>
+      </header>
+
+      <main class="content">
+        <div id="globalMessage" class="alert hidden"></div>
+
+        <section class="stats-grid">
+          <article class="glass-card stat-card">
+            <p class="stat-label">Applications</p>
+            <h3 id="applicationsCount">0</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Average Match</p>
+            <h3 id="avgMatch">0%</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Resume Status</p>
+            <h3 id="resumeStatus">Not Uploaded</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Pipeline Stage</p>
+            <h3>Active</h3>
+          </article>
+        </section>
+
+        <section id="recommendedSection" class="glass-card section-card dual-col">
+          <div class="score-panel">
+            <div id="jobseekerScoreCircle" class="score-circle score-circle-xl" data-score="0">
+              <div class="score-inner">
+                <strong id="jobseekerScoreText">0%</strong>
+                <span>Resume Match</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="jobseekerTrendChart"></canvas>
+          </div>
+        </section>
+
+        <section id="resumeSection" class="glass-card section-card">
+          <div class="section-head">
+            <h2>Upload Resume</h2>
+            <p class="muted">Only PDF files up to 5MB are accepted.</p>
+          </div>
+          <form id="resumeUploadForm" class="inline-form">
+            <input id="resumeFile" type="file" accept="application/pdf" required>
+            <button class="btn btn-primary" type="submit">Upload</button>
+          </form>
+        </section>
+
+        <section id="jobsSection" class="section-card">
+          <div class="section-head">
+            <h2>Open Roles</h2>
+          </div>
+          <div id="jobsContainer" class="job-grid"></div>
+        </section>
+
+        <section id="applicationsSection" class="glass-card section-card">
+          <div class="section-head">
+            <h2>Application Activity</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody id="jobseekerStatusTableBody">
+                <tr><td class="muted" colspan="2">Application data will appear here after job applications.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard-ui.js"></script>
+  <script src="js/jobseeker.js"></script>
+</body>
+</html>

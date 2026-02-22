@@ -1,0 +1,706 @@
+{
+  "basePath": "/",
+  "definitions": {},
+  "info": {
+    "description": "API documentation for IRIS backend.",
+    "title": "IRIS - Intelligent Resume Insight System API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/applications": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "job_id": {
+                  "example": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "job_id"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Application created",
+            "examples": {
+              "application/json": {
+                "application_id": 5,
+                "match_score": 78.42,
+                "matched_skills": [
+                  "python"
+                ],
+                "message": "Applied successfully",
+                "missing_skills": [
+                  "mysql"
+                ]
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate application"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Apply to a job",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/applications/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "My applications",
+            "examples": {
+              "application/json": [
+                {
+                  "application_id": 5,
+                  "created_at": "2026-02-22T12:35:00",
+                  "job_id": 1,
+                  "job_title": "Python Backend Developer",
+                  "location": "Bangalore",
+                  "match_score": 78.42,
+                  "status": "Applied"
+                }
+              ]
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List my applications",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/applications/{application_id}/status": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "status": {
+                  "example": "Shortlisted",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated",
+            "examples": {
+              "application/json": {
+                "message": "Application status updated",
+                "status": "Shortlisted"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update application status (Employer)",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "example": "employer@iris.com",
+                  "type": "string"
+                },
+                "password": {
+                  "example": "StrongPass@123",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login success",
+            "examples": {
+              "application/json": {
+                "access_token": "<JWT_TOKEN>",
+                "message": "Login successful",
+                "user": {
+                  "email": "employer@iris.com",
+                  "id": 2,
+                  "name": "Employer One",
+                  "role": "employer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login and obtain JWT",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "example": "employer@iris.com",
+                  "type": "string"
+                },
+                "name": {
+                  "example": "Employer One",
+                  "type": "string"
+                },
+                "password": {
+                  "example": "StrongPass@123",
+                  "type": "string"
+                },
+                "role": {
+                  "example": "employer",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "email",
+                "password",
+                "role"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Registered",
+            "examples": {
+              "application/json": {
+                "message": "User registered successfully"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "summary": "Register a user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Summary",
+            "examples": {
+              "application/json": {
+                "average_match_score": 74.2,
+                "total_applications": 19,
+                "total_jobs": 6,
+                "total_users": 10
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Admin dashboard summary",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/dashboard/analytics": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Analytics",
+            "examples": {
+              "application/json": {
+                "average_match_score": 74.2,
+                "role_distribution": {
+                  "admin": 1,
+                  "employer": 3,
+                  "jobseeker": 6
+                },
+                "total_applications": 19,
+                "total_jobs": 6,
+                "total_users": 10
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "System analytics (Admin)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/dashboard/users": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Users",
+            "examples": {
+              "application/json": [
+                {
+                  "created_at": "2026-02-22T09:00:00",
+                  "email": "admin@iris.com",
+                  "id": 1,
+                  "name": "Admin",
+                  "role": "admin"
+                }
+              ]
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List all users (Admin)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/dashboard/users/{user_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "examples": {
+              "application/json": {
+                "message": "User deleted successfully"
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete user (Admin)",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/jobs": {
+      "get": {
+        "parameters": [
+          {
+            "example": "Python",
+            "in": "query",
+            "name": "title",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "example": "Bangalore",
+            "in": "query",
+            "name": "location",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job list",
+            "examples": {
+              "application/json": [
+                {
+                  "created_at": "2026-02-22T10:00:00",
+                  "description": "Build Flask APIs",
+                  "employer_id": 2,
+                  "id": 1,
+                  "location": "Bangalore",
+                  "required_skills": [
+                    "flask",
+                    "python"
+                  ],
+                  "title": "Python Backend Developer"
+                }
+              ]
+            }
+          }
+        },
+        "summary": "List jobs with optional search filters",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "description": {
+                  "example": "Build Flask APIs and optimize SQL queries",
+                  "type": "string"
+                },
+                "location": {
+                  "example": "Bangalore",
+                  "type": "string"
+                },
+                "required_skills": {
+                  "example": [
+                    "python",
+                    "flask",
+                    "mysql",
+                    "sql"
+                  ],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "example": "Python Backend Developer",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "description",
+                "location",
+                "required_skills"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Job created",
+            "examples": {
+              "application/json": {
+                "job_id": 1,
+                "message": "Job created successfully"
+              }
+            }
+          },
+          "403": {
+            "description": "Only employer can create jobs"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create job (Employer)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "examples": {
+              "application/json": {
+                "message": "Job deleted successfully"
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete job (Employer)",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "required_skills": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "examples": {
+              "application/json": {
+                "message": "Job updated successfully"
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update job (Employer)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}/applicants": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Applicants list",
+            "examples": {
+              "application/json": {
+                "applicants": [
+                  {
+                    "application_id": 5,
+                    "applied_at": "2026-02-22T12:00:00",
+                    "email": "john@x.com",
+                    "match_score": 88.4,
+                    "name": "John",
+                    "status": "Applied",
+                    "user_id": 7
+                  }
+                ],
+                "job_id": 1
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "View applicants by job sorted by match score",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/resumes/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Resume details",
+            "examples": {
+              "application/json": {
+                "extracted_skills": [
+                  "flask",
+                  "python"
+                ],
+                "filename": "resume.pdf",
+                "id": 3,
+                "uploaded_at": "2026-02-22T12:30:00"
+              }
+            }
+          },
+          "404": {
+            "description": "No resume found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get latest resume of logged-in jobseeker",
+        "tags": [
+          "Resume"
+        ]
+      }
+    },
+    "/api/resumes/upload": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "description": "PDF resume",
+            "in": "formData",
+            "name": "file",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Uploaded",
+            "examples": {
+              "application/json": {
+                "extracted_skills": [
+                  "flask",
+                  "python"
+                ],
+                "message": "Resume uploaded successfully",
+                "resume_id": 3
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Upload resume PDF",
+        "tags": [
+          "Resume"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "http"
+  ],
+  "securityDefinitions": {
+    "BearerAuth": {
+      "description": "JWT format: Bearer <token>",
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0"
+}

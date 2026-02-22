@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - IRIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">IRIS</div>
+      <nav class="sidebar-nav">
+        <a class="active" href="dashboard-admin.html">Dashboard</a>
+        <a href="#usersSection">Users</a>
+        <a href="#jobsSection">Jobs</a>
+        <a href="#applicationsSection">Applications</a>
+        <a href="#analyticsSection">Analytics</a>
+      </nav>
+      <button id="logoutBtn" class="btn btn-secondary full-width" type="button">Logout</button>
+    </aside>
+
+    <div class="main-panel">
+      <header class="topbar">
+        <h1>Admin Workspace</h1>
+        <p id="welcomeText" class="muted"></p>
+      </header>
+
+      <main class="content">
+        <div id="globalMessage" class="alert hidden"></div>
+
+        <section class="stats-grid">
+          <article class="glass-card stat-card">
+            <p class="stat-label">Total Users</p>
+            <h3 id="totalUsers">0</h3>
+          </article>
+          <article id="jobsSection" class="glass-card stat-card">
+            <p class="stat-label">Total Jobs</p>
+            <h3 id="totalJobs">0</h3>
+          </article>
+          <article id="applicationsSection" class="glass-card stat-card">
+            <p class="stat-label">Total Applications</p>
+            <h3 id="totalApplications">0</h3>
+          </article>
+          <article class="glass-card stat-card">
+            <p class="stat-label">Average Match</p>
+            <h3 id="averageMatch">0%</h3>
+          </article>
+        </section>
+
+        <section id="analyticsSection" class="glass-card section-card dual-col">
+          <div class="chart-wrap">
+            <canvas id="adminOverviewChart"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="adminRolesChart"></canvas>
+          </div>
+        </section>
+
+        <section class="glass-card section-card">
+          <div class="section-head">
+            <h2>Role Distribution</h2>
+          </div>
+          <div id="roleDistribution" class="tag-list"></div>
+        </section>
+
+        <section id="usersSection" class="glass-card section-card">
+          <div class="section-head">
+            <h2>Users</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard-ui.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

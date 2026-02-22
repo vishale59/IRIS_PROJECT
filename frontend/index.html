@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IRIS - AI Resume Analysis and Job Matching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-body">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <header class="top-nav reveal">
+    <div class="container nav-content">
+      <a href="index.html" class="brand">IRIS</a>
+      <nav class="nav-links">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section">
+      <div class="container hero-content">
+        <div class="hero-copy reveal">
+          <h1>AI Resume Analysis &amp; Intelligent Job Matching</h1>
+          <p class="hero-subtitle">Precision-based resume evaluation using similarity algorithms and skill gap detection.</p>
+          <div class="hero-actions">
+            <a href="register.html" class="btn btn-primary">Get Started</a>
+            <a href="#dashboard-preview" class="text-link">View Demo</a>
+          </div>
+        </div>
+
+        <aside class="glass-card dashboard-mock reveal">
+          <div class="mock-head">
+            <p>Match Engine Output</p>
+            <span class="status-pill">Live</span>
+          </div>
+          <div class="mock-body">
+            <div class="score-circle score-circle-lg" data-score="87">
+              <div class="score-inner">
+                <strong class="score-value">87%</strong>
+                <span>Match</span>
+              </div>
+            </div>
+
+            <div class="tag-columns">
+              <div>
+                <p class="label">Matched Skills</p>
+                <div class="tag-list">
+                  <span class="tag tag-success">Python</span>
+                  <span class="tag tag-success">NLP</span>
+                  <span class="tag tag-success">SQL</span>
+                </div>
+              </div>
+              <div>
+                <p class="label">Missing Skills</p>
+                <div class="tag-list">
+                  <span class="tag tag-danger">Docker</span>
+                  <span class="tag tag-danger">AWS</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Applicant</th>
+                    <th>Role</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>A. Shah</td>
+                    <td>ML Engineer</td>
+                    <td><span class="score-badge">91%</span></td>
+                  </tr>
+                  <tr>
+                    <td>N. Roy</td>
+                    <td>Data Analyst</td>
+                    <td><span class="score-badge">87%</span></td>
+                  </tr>
+                  <tr>
+                    <td>M. Rao</td>
+                    <td>Backend Dev</td>
+                    <td><span class="score-badge">82%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-title reveal">
+          <h2>Core Capabilities</h2>
+        </div>
+        <div class="capability-grid">
+          <article class="glass-card capability-card reveal">
+            <h3>Resume Processing</h3>
+            <p>Secure PDF upload and intelligent text extraction.</p>
+          </article>
+          <article class="glass-card capability-card reveal">
+            <h3>Similarity Matching</h3>
+            <p>TF-IDF vectorization and cosine similarity scoring.</p>
+          </article>
+          <article class="glass-card capability-card reveal">
+            <h3>Skill Gap Detection</h3>
+            <p>Automatic identification of matched and missing skills.</p>
+          </article>
+          <article class="glass-card capability-card reveal">
+            <h3>Intelligent Ranking</h3>
+            <p>Sorted candidate list based on calculated match percentage.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container reveal">
+        <div class="section-title">
+          <h2>Processing Workflow</h2>
+          <p class="muted">Resume data is processed through deterministic stages before ranking output is generated.</p>
+        </div>
+        <div class="workflow">
+          <div class="workflow-line"></div>
+          <div class="step">Resume Upload</div>
+          <div class="step">NLP Processing</div>
+          <div class="step">Vectorization</div>
+          <div class="step">Similarity Calculation</div>
+          <div class="step">Recommendation &amp; Ranking</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard-preview" class="section">
+      <div class="container reveal">
+        <div class="section-title">
+          <h2>Analysis Dashboard Preview</h2>
+        </div>
+        <div class="glass-card dashboard-preview">
+          <div class="preview-top">
+            <div class="score-circle score-circle-xl" data-score="87">
+              <div class="score-inner">
+                <strong class="score-value">87%</strong>
+                <span>Candidate Match</span>
+              </div>
+            </div>
+
+            <div class="preview-skills">
+              <h3>Skill Differential</h3>
+              <div class="tag-list">
+                <span class="tag tag-success">Flask</span>
+                <span class="tag tag-success">Pandas</span>
+                <span class="tag tag-success">Numpy</span>
+                <span class="tag tag-danger">Kubernetes</span>
+                <span class="tag tag-danger">Terraform</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Applicant</th>
+                  <th>Position</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#1</td>
+                  <td>Varun Mehta</td>
+                  <td>Data Engineer</td>
+                  <td>92%</td>
+                  <td><span class="badge badge-success">Shortlisted</span></td>
+                </tr>
+                <tr>
+                  <td>#2</td>
+                  <td>Sana Khan</td>
+                  <td>Data Engineer</td>
+                  <td>87%</td>
+                  <td><span class="badge badge-info">Interview</span></td>
+                </tr>
+                <tr>
+                  <td>#3</td>
+                  <td>Priya Nair</td>
+                  <td>Data Engineer</td>
+                  <td>81%</td>
+                  <td><span class="badge">Review</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container reveal">
+        <div class="section-title">
+          <h2>Engineered Architecture</h2>
+        </div>
+        <div class="architecture-grid">
+          <div class="glass-card architecture-item"><span class="dot"></span>JWT Authentication</div>
+          <div class="glass-card architecture-item"><span class="dot"></span>Role-Based Access Control</div>
+          <div class="glass-card architecture-item"><span class="dot"></span>REST API Integration</div>
+          <div class="glass-card architecture-item"><span class="dot"></span>Secure File Processing</div>
+          <div class="glass-card architecture-item"><span class="dot"></span>MySQL Database</div>
+          <div class="glass-card architecture-item"><span class="dot"></span>Modular Backend Structure</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta-section reveal">
+      <div class="container">
+        <h2>Built for data-driven recruitment.</h2>
+        <a href="login.html" class="btn btn-primary btn-glow">Launch IRIS</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/landing.js"></script>
+</body>
+</html>
