@@ -1,6 +1,6 @@
 from flasgger import swag_from
 from flask import Blueprint, jsonify
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import func
 
 from app import db
@@ -21,6 +21,7 @@ dashboard_bp = Blueprint("dashboard_bp", __name__)
 
 @dashboard_bp.get("")
 @swag_from(DASH_SUMMARY_DOC)
+@jwt_required()
 @role_required("admin")
 def dashboard_summary():
     avg_match_score = db.session.query(func.avg(Application.match_score)).scalar() or 0.0
@@ -37,6 +38,7 @@ def dashboard_summary():
 
 @dashboard_bp.get("/users")
 @swag_from(DASH_USERS_DOC)
+@jwt_required()
 @role_required("admin")
 def list_users():
     users = User.query.order_by(User.created_at.desc()).all()
@@ -56,6 +58,7 @@ def list_users():
 
 @dashboard_bp.delete("/users/<int:user_id>")
 @swag_from(DASH_DELETE_USER_DOC)
+@jwt_required()
 @role_required("admin")
 def delete_user(user_id):
     current_admin_id = int(get_jwt_identity())
@@ -82,6 +85,7 @@ def delete_user(user_id):
 
 @dashboard_bp.get("/analytics")
 @swag_from(DASH_ANALYTICS_DOC)
+@jwt_required()
 @role_required("admin")
 def analytics():
     role_rows = db.session.query(User.role, func.count(User.id)).group_by(User.role).all()

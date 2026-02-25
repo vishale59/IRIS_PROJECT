@@ -1,6 +1,6 @@
 from flasgger import swag_from
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app import db
 from app.docs.swagger_docs import RESUME_ME_DOC, RESUME_UPLOAD_DOC
@@ -14,6 +14,7 @@ resume_bp = Blueprint("resume_bp", __name__)
 
 @resume_bp.post("/upload")
 @swag_from(RESUME_UPLOAD_DOC)
+@jwt_required()
 @role_required("jobseeker")
 def upload_resume():
     file = request.files.get("file")
@@ -51,6 +52,7 @@ def upload_resume():
 
 @resume_bp.get("/me")
 @swag_from(RESUME_ME_DOC)
+@jwt_required()
 @role_required("jobseeker")
 def get_latest_resume():
     user_id = int(get_jwt_identity())

@@ -1,6 +1,6 @@
 from flasgger import swag_from
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 
 from app import db
 from app.docs.swagger_docs import APP_CREATE_DOC, APP_ME_DOC, APP_STATUS_DOC
@@ -69,6 +69,7 @@ def suggest_alternative_jobs(resume_text, all_jobs, resume_skills):
 
 @application_bp.post("")
 @swag_from(APP_CREATE_DOC)
+@jwt_required()
 @role_required("jobseeker")
 def apply_to_job():
     data = request.get_json(silent=True) or {}
@@ -76,6 +77,10 @@ def apply_to_job():
 
     if not job_id:
         return jsonify({"error": "job_id is required"}), 400
+
+    claims = get_jwt()
+    if claims.get("role") != "jobseeker":
+        return jsonify({"error": "Only jobseekers can apply to jobs"}), 403
 
     user_id = int(get_jwt_identity())
 
@@ -147,6 +152,7 @@ def apply_to_job():
 
 @application_bp.patch("/<int:application_id>/status")
 @swag_from(APP_STATUS_DOC)
+@jwt_required()
 @role_required("employer")
 def update_application_status(application_id):
     data = request.get_json(silent=True) or {}
@@ -171,6 +177,7 @@ def update_application_status(application_id):
 
 @application_bp.get("/me")
 @swag_from(APP_ME_DOC)
+@jwt_required()
 @role_required("jobseeker")
 def my_applications():
     user_id = int(get_jwt_identity())

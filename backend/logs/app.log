@@ -1,0 +1,2 @@
+2026-02-25 18:11:56,769 | WARNING | app | Failed login attempt for email=your_existing_user_email
+2026-02-25 18:14:31,376 | INFO | app | Successful login for user_id=1 role=jobseeker

@@ -1,6 +1,6 @@
 from flasgger import swag_from
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 
 from app import db
 from app.docs.swagger_docs import (
@@ -21,6 +21,7 @@ job_bp = Blueprint("job_bp", __name__)
 
 @job_bp.post("")
 @swag_from(JOB_CREATE_DOC)
+@jwt_required()
 @role_required("employer")
 def create_job():
     data = request.get_json(silent=True) or {}
@@ -29,6 +30,10 @@ def create_job():
     missing_fields = [field for field in required_fields if not data.get(field)]
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+    claims = get_jwt()
+    if claims.get("role") != "employer":
+        return jsonify({"error": "Only employers can create jobs"}), 403
 
     employer_id = int(get_jwt_identity())
     required_skills = parse_skills(data.get("required_skills"))
@@ -51,6 +56,7 @@ def create_job():
 
 @job_bp.get("")
 @swag_from(JOB_LIST_DOC)
+@jwt_required()
 def list_jobs():
     title = request.args.get("title", "", type=str).strip()
     location = request.args.get("location", "", type=str).strip()
@@ -81,6 +87,7 @@ def list_jobs():
 
 @job_bp.put("/<int:job_id>")
 @swag_from(JOB_UPDATE_DOC)
+@jwt_required()
 @role_required("employer")
 def update_job(job_id):
     employer_id = int(get_jwt_identity())
@@ -109,6 +116,7 @@ def update_job(job_id):
 
 @job_bp.delete("/<int:job_id>")
 @swag_from(JOB_DELETE_DOC)
+@jwt_required()
 @role_required("employer")
 def delete_job(job_id):
     employer_id = int(get_jwt_identity())
@@ -128,6 +136,7 @@ def delete_job(job_id):
 
 @job_bp.get("/<int:job_id>/applicants")
 @swag_from(JOB_APPLICANTS_DOC)
+@jwt_required()
 @role_required("employer")
 def view_applicants(job_id):
     employer_id = int(get_jwt_identity())

@@ -29,6 +29,7 @@ def create_app(config_class=DevelopmentConfig):
     CORS(app)
     db.init_app(app)
     jwt.init_app(app)
+    register_jwt_error_handlers()
 
     configure_logging(app)
 
@@ -115,6 +116,28 @@ def register_error_handlers(app):
     @app.errorhandler(500)
     def server_error(_err):
         return jsonify({"error": "Internal server error"}), 500
+
+
+def register_jwt_error_handlers():
+    @jwt.unauthorized_loader
+    def unauthorized_callback(reason):
+        return jsonify({"error": "Unauthorized", "message": reason}), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(reason):
+        return jsonify({"error": "Unauthorized", "message": reason}), 401
+
+    @jwt.expired_token_loader
+    def expired_token_callback(_jwt_header, _jwt_payload):
+        return jsonify({"error": "Unauthorized", "message": "Token has expired"}), 401
+
+    @jwt.needs_fresh_token_loader
+    def needs_fresh_token_callback(_jwt_header, _jwt_payload):
+        return jsonify({"error": "Unauthorized", "message": "Fresh token required"}), 401
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(_jwt_header, _jwt_payload):
+        return jsonify({"error": "Unauthorized", "message": "Token has been revoked"}), 401
 
 
 def export_openapi_file(app):
