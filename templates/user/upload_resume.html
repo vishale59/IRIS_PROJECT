@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Upload Resume — IRIS{% endblock %}
+{% block page_title %}Upload Resume{% endblock %}
+
+{% block content %}
+<div class="page-header anim-fade-up">
+  <h1>Upload &amp; Analyze Resume</h1>
+  <p>Drop your resume to get an AI-powered ATS score, skill gap analysis, and smart categorization</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:var(--sp-6);align-items:start">
+
+  <div class="card anim-fade-up d1">
+    <div class="card-header">
+      <div class="card-header-title">
+        <div class="card-icon card-icon-primary"><i class="fa-solid fa-file-arrow-up"></i></div>
+        <h3>Resume Upload</h3>
+      </div>
+      <span class="badge badge-muted">PDF · DOCX · DOC · Max 5MB</span>
+    </div>
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data" data-loading id="upload-form">
+
+        <!-- Drop Zone -->
+        <div class="upload-zone" id="upload-zone" style="margin-bottom:var(--sp-6)">
+          <div class="upload-icon-ring">
+            <i class="fa-solid fa-cloud-arrow-up" id="upload-icon"></i>
+          </div>
+          <div class="upload-title">Drag &amp; drop your resume here</div>
+          <div class="upload-sub">or click to browse files from your computer</div>
+          <div class="upload-types">Supports: PDF, DOCX, DOC &nbsp;·&nbsp; Max file size: 5MB</div>
+          <input type="file" id="file-input" name="resume" accept=".pdf,.docx,.doc" style="display:none" required/>
+        </div>
+
+        <!-- File preview (hidden until file selected) -->
+        <div id="upload-preview" style="display:none;align-items:center;gap:var(--sp-4);padding:var(--sp-4) var(--sp-5);background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:var(--r-xl);margin-bottom:var(--sp-6)">
+          <div style="width:44px;height:44px;background:rgba(16,185,129,0.15);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;color:var(--clr-success);font-size:20px;flex-shrink:0">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div id="file-name-display" class="truncate" style="font-size:13.5px;font-weight:600;color:var(--txt-primary)">filename.pdf</div>
+            <div id="file-size-display" style="font-size:12px;color:var(--txt-muted)"></div>
+          </div>
+          <i class="fa-solid fa-circle-check" style="color:var(--clr-success);font-size:20px"></i>
+        </div>
+
+        <!-- Degree selector -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fa-solid fa-graduation-cap" style="color:var(--clr-primary);margin-right:6px"></i>
+            Degree / Qualification
+            <span class="badge badge-primary" style="margin-left:8px">Smart Categorization</span>
+          </label>
+          <select name="degree" class="form-control">
+            <option value="">— Select your highest degree —</option>
+            <optgroup label="IT / Technology">
+              <option value="bca">BCA — Bachelor of Computer Applications</option>
+              <option value="mca">MCA — Master of Computer Applications</option>
+              <option value="b.tech">B.Tech — Computer Science / IT</option>
+              <option value="m.tech">M.Tech — Computer Science / IT</option>
+              <option value="bsc it">BSc IT</option>
+            </optgroup>
+            <optgroup label="Finance / Commerce">
+              <option value="bcom">BCom — Bachelor of Commerce</option>
+              <option value="b.com">B.Com (Hons)</option>
+              <option value="mcom">MCom</option>
+              <option value="bba">BBA — Business Administration</option>
+              <option value="mba">MBA</option>
+            </optgroup>
+            <optgroup label="Science">
+              <option value="bsc">BSc — Bachelor of Science</option>
+              <option value="msc">MSc — Master of Science</option>
+            </optgroup>
+            <optgroup label="Arts / Humanities">
+              <option value="ba">BA — Bachelor of Arts</option>
+              <option value="ma">MA — Master of Arts</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="llb">LLB — Law</option>
+              <option value="mbbs">MBBS — Medicine</option>
+              <option value="bdes">BDes — Design</option>
+            </optgroup>
+          </select>
+          <div class="form-hint">Used to auto-detect your career category (IT, Finance, Science, etc.)</div>
+        </div>
+
+        <!-- Optional Job Description -->
+        <div class="form-group">
+          <label class="form-label">Job Description <span style="color:var(--txt-muted);font-weight:400">(Optional — for targeted scoring)</span></label>
+          <textarea name="job_description" class="form-control" rows="5"
+            placeholder="Paste a job description here to get a precise ATS match score against that specific role…"></textarea>
+          <div class="form-hint">Leave blank for a general resume quality score.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze My Resume
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info sidebar -->
+  <div style="display:flex;flex-direction:column;gap:var(--sp-4)" class="anim-fade-up d2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-title">
+          <div class="card-icon card-icon-purple"><i class="fa-solid fa-brain"></i></div>
+          <h3>What IRIS Analyzes</h3>
+        </div>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:var(--sp-4)">
+        {% for icon, title, desc, color in [
+          ('fa-chart-bar','ATS Score','Keyword + semantic TF-IDF scoring','primary'),
+          ('fa-check-circle','Matched Skills','Skills found in your resume','success'),
+          ('fa-exclamation-circle','Skill Gaps','High-demand skills you should add','warning'),
+          ('fa-lightbulb','AI Suggestions','Personalized improvement tips','orange'),
+          ('fa-tag','Smart Category','Auto-detected career domain','purple'),
+        ] %}
+        <div style="display:flex;gap:var(--sp-3);align-items:flex-start">
+          <div style="width:34px;height:34px;background:rgba(99,102,241,0.1);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fa-solid {{ icon }}" style="color:var(--clr-primary);font-size:13px"></i>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--txt-primary)">{{ title }}</div>
+            <div style="font-size:12px;color:var(--txt-muted)">{{ desc }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h4 style="margin-bottom:var(--sp-4);color:var(--txt-secondary)">Score Guide</h4>
+        {% for label, clr, rng in [('Excellent','var(--clr-success)','75–100'),('Good','var(--clr-primary)','50–74'),('Fair','var(--clr-warning)','30–49'),('Needs Work','var(--clr-danger)','0–29')] %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:{{ clr }}"></div>
+            <span style="font-size:12.5px;font-weight:600;color:{{ clr }}">{{ label }}</span>
+          </div>
+          <span style="font-size:12px;color:var(--txt-muted)">{{ rng }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Browse Jobs — IRIS{% endblock %}
+{% block page_title %}Browse Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header anim-fade-up">
+  <div class="page-header-row">
+    <div>
+      <h1>Browse Jobs</h1>
+      <p><span class="grad-text" style="font-weight:700">{{ jobs|length }}</span> job{{ 's' if jobs|length != 1 }} available{% if search %} for "{{ search }}"{% endif %}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card anim-fade-up d1" style="margin-bottom:var(--sp-6)">
+  <div class="card-body" style="padding:var(--sp-4) var(--sp-6)">
+    <form method="GET" action="{{ url_for('user.job_listings') }}">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:var(--sp-3);align-items:end">
+        <div>
+          <label class="form-label">Search</label>
+          <div class="input-wrap">
+            <i class="input-icon fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="q" class="form-control" placeholder="Job title, company, skills…" value="{{ search }}"/>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Location</label>
+          <div class="input-wrap">
+            <i class="input-icon fa-solid fa-location-dot"></i>
+            <input type="text" name="location" class="form-control" placeholder="City…" value="{{ location }}"/>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Type</label>
+          <select name="type" class="form-control">
+            <option value="">All Types</option>
+            {% for t in ['Full-time','Part-time','Contract','Internship','Remote'] %}
+              <option value="{{ t }}" {% if job_type == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Category</label>
+          <select name="category" class="form-control">
+            <option value="">All</option>
+            {% for c in ['Engineering','Data Science','DevOps','Design','IT','Finance','Science','Arts','Medical','Law'] %}
+              <option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary" style="width:100%;margin-top:24px">
+            <i class="fa-solid fa-filter"></i> Filter
+          </button>
+        </div>
+      </div>
+      {% if search or location or job_type or category %}
+      <div style="margin-top:var(--sp-3)">
+        <a href="{{ url_for('user.job_listings') }}" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-xmark"></i> Clear All Filters
+        </a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% if jobs %}
+<div class="jobs-grid anim-fade-up d2">
+  {% for job in jobs %}
+  <div class="job-card" data-searchable>
+    <div class="job-card-top">
+      <div class="company-avatar">{{ job.company[0].upper() }}</div>
+      <div class="job-title-wrap">
+        <div class="job-title">{{ job.title }}</div>
+        <div class="job-company">{{ job.company }}</div>
+      </div>
+      {% if job.id in applied_ids %}
+        <span class="badge badge-success"><i class="fa-solid fa-check"></i> Applied</span>
+      {% endif %}
+    </div>
+
+    <div class="job-meta-row">
+      {% if job.location %}<span class="job-meta-item"><i class="fa-solid fa-location-dot"></i> {{ job.location }}</span>{% endif %}
+      <span class="job-meta-item">{{ job.job_type }}</span>
+      <span class="job-meta-item">{{ job.experience_level }}</span>
+    </div>
+
+    {% if job.category %}
+      <div><span class="cat-badge"><i class="fa-solid fa-tag"></i> {{ job.category }}</span></div>
+    {% endif %}
+
+    {% if job.skills_required %}
+    <div class="chip-group">
+      {% for skill in job.skills_required.split(',')[:4] %}
+        <span class="chip">{{ skill.strip() }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if job.salary_min or job.salary_max %}
+    <div style="font-size:13.5px;font-weight:700;color:var(--clr-success)">
+      <i class="fa-solid fa-indian-rupee-sign" style="font-size:12px"></i>
+      {% if job.salary_min %}{{ "{:,}".format(job.salary_min) }}{% endif %}{% if job.salary_min and job.salary_max %} – {% endif %}{% if job.salary_max %}{{ "{:,}".format(job.salary_max) }}{% endif %}
+    </div>
+    {% endif %}
+
+    <div style="font-size:11.5px;color:var(--txt-muted)">
+      <i class="fa-regular fa-clock"></i> {{ job.created_at.strftime('%b %d, %Y') }}
+      {% if job.deadline %} &nbsp;·&nbsp; <i class="fa-solid fa-calendar-xmark" style="color:var(--clr-warning)"></i> {{ job.deadline.strftime('%b %d') }}{% endif %}
+    </div>
+
+    <div class="job-footer">
+      <a href="{{ url_for('user.job_detail', job_id=job.id) }}" class="btn btn-primary btn-sm" style="flex:1">
+        {% if job.id in applied_ids %}<i class="fa-solid fa-eye"></i> View{% else %}<i class="fa-solid fa-paper-plane"></i> Apply Now{% endif %}
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card anim-fade-up">
+  <div class="empty-state">
+    <div class="empty-state-icon"><i class="fa-solid fa-briefcase-blank"></i></div>
+    <h3>No jobs found</h3>
+    <p>Try different keywords or clear your filters.</p>
+    <a href="{{ url_for('user.job_listings') }}" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Clear Filters</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

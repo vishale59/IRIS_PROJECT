@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{% if job %}Edit Job{% else %}Post a Job{% endif %} — IRIS{% endblock %}
+{% block page_title %}{% if job %}Edit Job{% else %}Post a Job{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header anim-fade-up">
+  <h1>{% if job %}Edit Job Posting{% else %}Post a New Job{% endif %}</h1>
+  <p>Fill in the details below. Fields marked <span style="color:var(--clr-danger)">*</span> are required.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:var(--sp-6);align-items:start">
+  <div class="card anim-fade-up d1">
+    <div class="card-header"><div class="card-header-title"><div class="card-icon card-icon-primary"><i class="fa-solid fa-briefcase"></i></div><h3>Job Information</h3></div></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('employer.edit_job', job_id=job.id) if job else url_for('employer.post_job') }}" data-loading>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Job Title <span class="req">*</span></label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-briefcase"></i>
+              <input type="text" name="title" class="form-control" placeholder="e.g. Senior Python Developer" value="{{ job.title if job else '' }}" required/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company <span class="req">*</span></label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-building"></i>
+              <input type="text" name="company" class="form-control" placeholder="e.g. TechCorp" value="{{ job.company if job else '' }}" required/></div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-location-dot"></i>
+              <input type="text" name="location" class="form-control" placeholder="e.g. Bangalore, Remote" value="{{ job.location if job else '' }}"/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Job Type</label>
+            <select name="job_type" class="form-control">
+              {% for t in ['Full-time','Part-time','Contract','Internship','Remote'] %}
+                <option value="{{ t }}" {% if (job.job_type if job else 'Full-time') == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Experience Level</label>
+            <select name="experience_level" class="form-control">
+              {% for lvl in ['Entry','Mid','Senior','Lead'] %}
+                <option value="{{ lvl }}" {% if (job.experience_level if job else 'Entry') == lvl %}selected{% endif %}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-control">
+              <option value="">— Select Category —</option>
+              {% for c in ['Engineering','Data Science','DevOps','Design','Finance','IT','Science','Arts','Medical','Law','General'] %}
+                <option value="{{ c }}" {% if job and job.category == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Job Description <span class="req">*</span></label>
+          <textarea name="description" class="form-control" rows="6" placeholder="Describe the role, responsibilities, and what a typical day looks like…" required>{{ job.description if job else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Requirements</label>
+          <textarea name="requirements" class="form-control" rows="4" placeholder="Qualifications, education, years of experience…">{{ job.requirements if job else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Required Skills</label>
+          <div class="input-wrap"><i class="input-icon fa-solid fa-code"></i>
+            <input type="text" name="skills_required" class="form-control" placeholder="python, flask, docker, aws (comma-separated)" value="{{ job.skills_required if job else '' }}"/></div>
+          <div class="form-hint">Separate with commas for better ATS matching.</div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Min Salary (₹/yr)</label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-indian-rupee-sign"></i>
+              <input type="number" name="salary_min" class="form-control" placeholder="500000" value="{{ job.salary_min if job else '' }}"/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Salary (₹/yr)</label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-indian-rupee-sign"></i>
+              <input type="number" name="salary_max" class="form-control" placeholder="1200000" value="{{ job.salary_max if job else '' }}"/></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Application Deadline</label>
+          <div class="input-wrap"><i class="input-icon fa-solid fa-calendar"></i>
+            <input type="date" name="deadline" class="form-control" value="{{ job.deadline.strftime('%Y-%m-%d') if job and job.deadline else '' }}"/></div>
+        </div>
+        {% if job %}
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;font-size:13.5px;color:var(--txt-secondary)">
+            <input type="checkbox" name="is_active" {% if job.is_active %}checked{% endif %} style="accent-color:var(--clr-primary)"/> Job is Active
+          </label>
+        </div>
+        {% endif %}
+        <div style="display:flex;gap:var(--sp-3)">
+          <button type="submit" class="btn btn-primary btn-lg" style="flex:1">
+            <i class="fa-solid fa-{% if job %}save{% else %}paper-plane{% endif %}"></i> {% if job %}Save Changes{% else %}Post Job{% endif %}
+          </button>
+          <a href="{{ url_for('employer.dashboard') }}" class="btn btn-secondary btn-lg">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:var(--sp-4)" class="anim-fade-up d2">
+    <div class="card">
+      <div class="card-body">
+        <h4 style="color:var(--txt-secondary);margin-bottom:var(--sp-4)"><i class="fa-solid fa-lightbulb" style="color:var(--clr-warning);margin-right:6px"></i>Tips</h4>
+        {% for tip in ['Clear job titles attract the right candidates.','Comma-separated skills improve ATS matching precision.','Detailed descriptions boost application quality.','Set a salary range to attract top talent.','A deadline creates urgency and more applications.'] %}
+        <div style="display:flex;gap:var(--sp-2);align-items:flex-start;margin-bottom:var(--sp-3);font-size:12.5px;color:var(--txt-muted)">
+          <i class="fa-solid fa-circle-check" style="color:var(--clr-success);margin-top:2px;flex-shrink:0;font-size:12px"></i>
+          <span>{{ tip }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body text-center" style="padding:var(--sp-8)">
+        <i class="fa-solid fa-robot" style="font-size:36px;color:var(--clr-primary);opacity:.6;margin-bottom:var(--sp-4);display:block"></i>
+        <div style="font-size:13px;font-weight:600;color:var(--txt-primary);margin-bottom:var(--sp-2)">AI-Powered Matching</div>
+        <div style="font-size:12.5px;color:var(--txt-muted)">IRIS auto-scores applicants against your job using ATS analysis for fast candidate ranking.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

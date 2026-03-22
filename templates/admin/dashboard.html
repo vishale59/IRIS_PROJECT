@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — IRIS{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header anim-fade-up">
+  <h1>Platform Overview</h1>
+  <p>Full analytics and management for IRIS Job Portal</p>
+</div>
+
+<div class="stat-grid anim-fade-up d1">
+  <div class="stat-card blue"><div class="stat-icon-wrap"><i class="fa-solid fa-users"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.total_users }}">{{ stats.total_users }}</div><div class="stat-label">Total Users</div></div></div>
+  <div class="stat-card green"><div class="stat-icon-wrap"><i class="fa-solid fa-user-tie"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.jobseekers }}">{{ stats.jobseekers }}</div><div class="stat-label">Job Seekers</div></div></div>
+  <div class="stat-card purple"><div class="stat-icon-wrap"><i class="fa-solid fa-building"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.employers }}">{{ stats.employers }}</div><div class="stat-label">Employers</div></div></div>
+  <div class="stat-card orange"><div class="stat-icon-wrap"><i class="fa-solid fa-briefcase"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.active_jobs }}">{{ stats.active_jobs }}</div><div class="stat-label">Active Jobs</div></div></div>
+  <div class="stat-card cyan"><div class="stat-icon-wrap"><i class="fa-solid fa-paper-plane"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.total_applications }}">{{ stats.total_applications }}</div><div class="stat-label">Applications</div></div></div>
+  <div class="stat-card green"><div class="stat-icon-wrap"><i class="fa-solid fa-trophy"></i></div><div class="stat-body"><div class="stat-value" data-count="{{ stats.hired }}">{{ stats.hired }}</div><div class="stat-label">Hired</div></div></div>
+</div>
+
+<div class="grid-2 anim-fade-up d2" style="margin-bottom:var(--sp-6)">
+  <div class="card">
+    <div class="card-header"><div class="card-header-title"><div class="card-icon card-icon-primary"><i class="fa-solid fa-chart-pie"></i></div><h3>Application Status Distribution</h3></div></div>
+    <div class="card-body">
+      {% set total = stats.total_applications or 1 %}
+      {% for label, val, color in [('Applied', status_dist.pending, 'var(--clr-warning)'),('Reviewed', status_dist.reviewed, 'var(--clr-info)'),('Shortlisted', status_dist.shortlisted, 'var(--clr-primary)'),('Rejected', status_dist.rejected, 'var(--clr-danger)'),('Hired', status_dist.hired, 'var(--clr-success)')] %}
+      <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3)">
+        <div style="width:88px;font-size:12.5px;font-weight:600;color:var(--txt-secondary)">{{ label }}</div>
+        <div class="progress-track" style="flex:1">
+          <div class="progress-fill" data-pct="{{ ((val / total) * 100)|round|int }}" style="width:0;background:{{ color }}"></div>
+        </div>
+        <div style="width:28px;text-align:right;font-size:12.5px;font-weight:700;color:var(--txt-primary)">{{ val }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-title"><div class="card-icon card-icon-info"><i class="fa-solid fa-building"></i></div><h3>Top Companies</h3></div>
+      <a href="{{ url_for('admin.jobs') }}" class="btn btn-secondary btn-sm">All Jobs</a>
+    </div>
+    <div class="card-body p-0">
+      {% for company, count in top_companies %}
+      <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-6);border-bottom:1px solid var(--border-subtle)">
+        <div class="company-avatar" style="width:38px;height:38px;font-size:14px;border-radius:var(--r-md)">{{ company[0].upper() }}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--txt-primary)">{{ company }}</div><div style="font-size:11.5px;color:var(--txt-muted)">{{ count }} job{{ 's' if count != 1 }}</div></div>
+        <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;color:var(--clr-primary)">{{ count }}</span>
+      </div>
+      {% else %}<div style="padding:var(--sp-5) var(--sp-6);color:var(--txt-muted);font-size:13px">No jobs posted yet.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card anim-fade-up d3">
+  <div class="card-header">
+    <div class="card-header-title"><div class="card-icon card-icon-purple"><i class="fa-solid fa-user-clock"></i></div><h3>Recent Registrations</h3></div>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-sm">All Users</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-scroll">
+      <table class="iris-table">
+        <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Category</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          {% for user in recent_users %}
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:var(--sp-3)"><div class="company-avatar" style="width:34px;height:34px;font-size:12px;border-radius:50%">{{ user.full_name[0].upper() }}</div><span style="font-weight:600;color:var(--txt-primary)">{{ user.full_name }}</span></div></td>
+            <td style="color:var(--txt-muted)">{{ user.email }}</td>
+            <td><span class="badge {% if user.role == 'admin' %}badge-danger{% elif user.role == 'employer' %}badge-info{% else %}badge-success{% endif %}">{{ user.role }}</span></td>
+            <td>{% if user.category %}<span class="cat-badge" style="font-size:10.5px;padding:3px 8px">{{ user.category }}</span>{% else %}<span style="color:var(--txt-muted)">—</span>{% endif %}</td>
+            <td><span class="status-pill {% if user.is_active %}sp-active{% else %}sp-inactive{% endif %}">{{ 'Active' if user.is_active else 'Inactive' }}</span></td>
+            <td style="font-size:12px;color:var(--txt-muted)">{{ user.created_at.strftime('%b %d, %Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

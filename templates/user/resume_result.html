@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Resume Analysis — IRIS{% endblock %}
+{% block page_title %}Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="page-header anim-fade-up">
+  <div class="page-header-row">
+    <div>
+      <h1>Resume Analysis</h1>
+      <p>{{ resume.original_name or resume.filename }} · {{ resume.uploaded_at.strftime('%B %d, %Y') }}</p>
+    </div>
+    <div class="d-flex gap-3">
+      <a href="{{ url_for('user.upload_resume') }}" class="btn btn-secondary"><i class="fa-solid fa-rotate"></i> Re-analyze</a>
+      <a href="{{ url_for('user.job_listings') }}" class="btn btn-primary"><i class="fa-solid fa-briefcase"></i> Browse Jobs</a>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:300px 1fr;gap:var(--sp-6);align-items:start">
+
+  <!-- Score Panel -->
+  <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+    <!-- ATS Score Card -->
+    <div class="card anim-fade-up" style="background:linear-gradient(145deg,rgba(30,30,50,0.95),rgba(40,30,70,0.9));border-color:rgba(99,102,241,0.25)">
+      <div class="card-body text-center" style="padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:var(--sp-5)">ATS SCORE</div>
+        <div data-score-ring="{{ resume.ats_score|round|int }}" style="display:flex;justify-content:center;margin-bottom:var(--sp-5)"></div>
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.8)">
+          {% if resume.ats_score >= 75 %}🎉 Excellent — Very competitive!
+          {% elif resume.ats_score >= 50 %}👍 Good — Above average
+          {% elif resume.ats_score >= 30 %}⚡ Fair — Room to improve
+          {% else %}🔧 Needs Work — Major gaps{% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if resume.detected_category %}
+    <div class="card anim-fade-up d1">
+      <div class="card-body text-center" style="padding:var(--sp-6)">
+        <div style="font-size:10px;font-weight:700;color:var(--txt-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:var(--sp-3)">DETECTED CATEGORY</div>
+        <span class="cat-badge" style="font-size:14px;padding:8px 18px;display:inline-flex">
+          <i class="fa-solid fa-tag"></i> {{ resume.detected_category }}
+        </span>
+        <p style="font-size:11.5px;color:var(--txt-muted);margin-top:var(--sp-3)">Based on degree &amp; resume skills</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick stats -->
+    <div class="card anim-fade-up d2">
+      <div class="card-body">
+        <h4 style="color:var(--txt-secondary);margin-bottom:var(--sp-4);font-size:12px;letter-spacing:1px;text-transform:uppercase">Quick Stats</h4>
+        {% for label, val, clr in [
+          ('Matched Skills', matched|length, 'var(--clr-success)'),
+          ('Missing Skills', missing|length, 'var(--clr-danger)'),
+          ('Suggestions', suggestions|length, 'var(--clr-warning)'),
+        ] %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-subtle)">
+          <span style="font-size:13px;color:var(--txt-secondary)">{{ label }}</span>
+          <span style="font-size:15px;font-weight:800;color:{{ clr }}">{{ val }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Panel -->
+  <div style="display:flex;flex-direction:column;gap:var(--sp-5)">
+
+    <!-- Matched Skills -->
+    <div class="card anim-fade-up d1">
+      <div class="card-header">
+        <div class="card-header-title">
+          <div class="card-icon card-icon-success"><i class="fa-solid fa-check-circle"></i></div>
+          <h3>Matched Skills <span class="badge badge-success" style="margin-left:8px">{{ matched|length }} found</span></h3>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if matched %}
+          <div class="chip-group">
+            {% for skill in matched %}
+              <span class="chip chip-success"><i class="fa-solid fa-check" style="font-size:10px"></i> {{ skill }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="font-size:13px;color:var(--txt-muted)">No specific skills matched. Paste a job description for targeted analysis.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Missing Skills -->
+    {% if missing %}
+    <div class="card anim-fade-up d2">
+      <div class="card-header">
+        <div class="card-header-title">
+          <div class="card-icon card-icon-danger"><i class="fa-solid fa-circle-exclamation"></i></div>
+          <h3>Skill Gaps <span class="badge badge-danger" style="margin-left:8px">{{ missing|length }} missing</span></h3>
+        </div>
+        <span class="badge badge-warning">Add to boost score</span>
+      </div>
+      <div class="card-body">
+        <div class="chip-group">
+          {% for skill in missing %}
+            <span class="chip chip-danger"><i class="fa-solid fa-plus" style="font-size:10px"></i> {{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Job Suggestions -->
+    {% if job_suggestions.recommended or job_suggestions.alternative or job_suggestions.primary %}
+    <div class="card anim-fade-up d3">
+      <div class="card-header">
+        <div class="card-header-title">
+          <div class="card-icon card-icon-primary"><i class="fa-solid fa-briefcase"></i></div>
+          <h3>Career Suggestions</h3>
+        </div>
+        {% if job_suggestions.best_match %}
+        <span class="badge badge-success">Best Match: {{ job_suggestions.best_match }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:var(--sp-5)">
+        {% if job_suggestions.recommended or job_suggestions.primary %}
+        <div>
+          <h4 style="margin-bottom:var(--sp-3);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--txt-secondary)">Recommended Jobs</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-4)">
+            {% for role in (job_suggestions.recommended or job_suggestions.primary) %}
+              {% set role_detail = (job_suggestions.details | selectattr('role', 'equalto', role) | list | first) %}
+              <div class="card" style="border-color:rgba(34,197,94,0.25);background:linear-gradient(180deg,rgba(34,197,94,0.08),rgba(255,255,255,0.02))">
+                <div class="card-body" style="padding:var(--sp-5)">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3);margin-bottom:var(--sp-3)">
+                    <div style="display:flex;gap:12px;align-items:center">
+                      <div style="width:40px;height:40px;border-radius:12px;background:rgba(34,197,94,0.14);display:flex;align-items:center;justify-content:center;color:var(--clr-success)">
+                        <i class="fa-solid {{ role_detail.icon if role_detail else 'fa-briefcase' }}"></i>
+                      </div>
+                      <div>
+                        <div style="font-weight:700;color:var(--txt-primary)">{{ role }}</div>
+                        {% if role == job_suggestions.best_match %}
+                        <div style="font-size:11px;color:var(--clr-success);font-weight:700">Top fit for your skill profile</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                    {% if role_detail %}
+                    <span class="badge badge-success">{{ role_detail.matched_skills|length }} skills</span>
+                    {% endif %}
+                  </div>
+                  {% if role_detail and role_detail.matched_skills %}
+                  <div class="chip-group">
+                    {% for skill in role_detail.matched_skills[:4] %}
+                    <span class="chip chip-success"><i class="fa-solid fa-star" style="font-size:10px"></i> {{ skill }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if job_suggestions.alternative %}
+        <div>
+          <h4 style="margin-bottom:var(--sp-3);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--txt-secondary)">Alternative Career Options</h4>
+          <div class="chip-group">
+            {% for role in job_suggestions.alternative %}
+              {% set role_detail = (job_suggestions.details | selectattr('role', 'equalto', role) | list | first) %}
+              <span class="chip" style="padding:10px 14px">
+                <i class="fa-solid {{ role_detail.icon if role_detail else 'fa-briefcase' }}"></i> {{ role }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- AI Suggestions -->
+    <div class="card anim-fade-up d3">
+      <div class="card-header">
+        <div class="card-header-title">
+          <div class="card-icon card-icon-warning"><i class="fa-solid fa-lightbulb"></i></div>
+          <h3>AI Improvement Suggestions</h3>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0">
+        {% for tip in suggestions %}
+        <div style="display:flex;gap:var(--sp-4);align-items:flex-start;padding:var(--sp-5) var(--sp-6);border-bottom:1px solid var(--border-subtle)">
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:800;color:var(--clr-primary)">{{ loop.index }}</div>
+          <p style="font-size:13.5px;line-height:1.7;color:var(--txt-secondary);margin:0">{{ tip }}</p>
+        </div>
+        {% else %}
+        <div style="padding:var(--sp-5) var(--sp-6)">
+          <p style="font-size:13.5px;color:var(--clr-success)"><i class="fa-solid fa-circle-check"></i> Your resume looks great — no major improvements needed!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

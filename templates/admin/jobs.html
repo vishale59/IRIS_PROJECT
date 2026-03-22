@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Jobs — IRIS Admin{% endblock %}
+{% block page_title %}Job Management{% endblock %}
+{% block content %}
+<div class="page-header anim-fade-up"><h1>Jobs</h1><p>{{ jobs|length }} total job posting{{ 's' if jobs|length != 1 }}</p></div>
+<div class="card anim-fade-up d1">
+  <div class="card-body p-0">
+    <div class="table-scroll">
+      <table class="iris-table">
+        <thead><tr><th>Title</th><th>Company</th><th>Category</th><th>Type</th><th>Applications</th><th>Status</th><th>Posted</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td><div style="font-weight:600;color:var(--txt-primary);font-size:13px">{{ job.title }}</div><div style="font-size:11.5px;color:var(--txt-muted)"><i class="fa-solid fa-location-dot"></i> {{ job.location or 'N/A' }}</div></td>
+            <td><div style="display:flex;align-items:center;gap:var(--sp-2)"><div class="company-avatar" style="width:30px;height:30px;font-size:11px;border-radius:var(--r-sm)">{{ job.company[0].upper() }}</div><span style="font-size:13px">{{ job.company }}</span></div></td>
+            <td>{% if job.category %}<span class="cat-badge" style="font-size:10.5px;padding:3px 8px">{{ job.category }}</span>{% else %}<span style="color:var(--txt-muted)">—</span>{% endif %}</td>
+            <td><span class="badge badge-info">{{ job.job_type }}</span></td>
+            <td><span style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--txt-primary)">{{ job.applications.count() }}</span></td>
+            <td><span class="status-pill {% if job.is_active %}sp-active{% else %}sp-inactive{% endif %}">{{ 'Active' if job.is_active else 'Inactive' }}</span></td>
+            <td style="font-size:12px;color:var(--txt-muted)">{{ job.created_at.strftime('%b %d, %Y') }}</td>
+            <td><a href="{{ url_for('admin.toggle_job', job_id=job.id) }}" class="btn {% if job.is_active %}btn-danger{% else %}btn-success{% endif %} btn-sm" data-confirm="Toggle job status?">{{ 'Deactivate' if job.is_active else 'Activate' }}</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

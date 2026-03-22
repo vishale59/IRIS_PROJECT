@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Profile — IRIS{% endblock %}
+{% block page_title %}Profile{% endblock %}
+
+{% block content %}
+<div class="anim-fade-up">
+  <div class="profile-hero">
+    <div class="profile-hero-inner">
+      <div class="profile-avatar-xl">{{ current_user.full_name[0].upper() }}</div>
+      <div class="profile-info">
+        <h2>{{ current_user.full_name }}</h2>
+        <p>{{ current_user.email }}</p>
+        <div class="profile-meta">
+          <span class="badge badge-primary"><i class="fa-solid fa-user-tie"></i> {{ current_user.role|capitalize }}</span>
+          {% if current_user.category %}<span class="cat-badge"><i class="fa-solid fa-tag"></i> {{ current_user.category }}</span>{% endif %}
+          {% if current_user.location %}<span class="badge badge-muted"><i class="fa-solid fa-location-dot"></i> {{ current_user.location }}</span>{% endif %}
+          <span class="badge badge-muted"><i class="fa-regular fa-calendar"></i> Member since {{ current_user.created_at.strftime('%b %Y') }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-title"><div class="card-icon card-icon-primary"><i class="fa-solid fa-pen-to-square"></i></div><h3>Edit Profile</h3></div>
+      </div>
+      <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}"><span class="alert-icon"><i class="fa-solid fa-circle-check"></i></span><span class="alert-body">{{ msg }}</span><button class="alert-close">&times;</button></div>
+          {% endfor %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('user.profile') }}">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="req">*</span></label>
+            <div class="input-wrap"><i class="input-icon fa-solid fa-user"></i>
+              <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" required/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-wrap"><i class="input-icon fa-regular fa-envelope"></i>
+              <input type="email" class="form-control" value="{{ current_user.email }}" disabled style="opacity:.5;cursor:not-allowed"/></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <div class="input-wrap"><i class="input-icon fa-solid fa-phone"></i>
+                <input type="tel" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="+91…"/></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <div class="input-wrap"><i class="input-icon fa-solid fa-location-dot"></i>
+                <input type="text" name="location" class="form-control" value="{{ current_user.location or '' }}" placeholder="City, Country"/></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Degree <span class="badge badge-primary" style="margin-left:6px">Auto-categorization</span></label>
+            <select name="degree" class="form-control">
+              <option value="">— Select degree —</option>
+              {% for val, lbl in [('bca','BCA'),('mca','MCA'),('b.tech','B.Tech'),('m.tech','M.Tech'),('bsc it','BSc IT'),('bcom','BCom'),('b.com','B.Com'),('mcom','MCom'),('bba','BBA'),('mba','MBA'),('bsc','BSc'),('msc','MSc'),('ba','BA'),('ma','MA'),('llb','LLB'),('mbbs','MBBS'),('bdes','BDes')] %}
+                <option value="{{ val }}" {% if current_user.degree == val %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea name="bio" class="form-control" rows="4" placeholder="A short intro about yourself…">{{ current_user.bio or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-save"></i> Save Changes</button>
+        </form>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+      <div class="card">
+        <div class="card-header"><div class="card-header-title"><div class="card-icon card-icon-success"><i class="fa-solid fa-chart-simple"></i></div><h3>Account Stats</h3></div></div>
+        <div class="card-body">
+          {% set app_count = current_user.applications.count() %}
+          {% set resume_count = current_user.resumes.count() %}
+          {% for label, val, icon, color in [('Applications Sent', app_count, 'fa-paper-plane', 'var(--clr-primary)'),('Resumes Uploaded', resume_count, 'fa-file-lines', 'var(--clr-success)')] %}
+          <div style="display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-4) 0;border-bottom:1px solid var(--border-subtle)">
+            <div style="width:44px;height:44px;border-radius:var(--r-lg);background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="fa-solid {{ icon }}" style="color:{{ color }};font-size:18px"></i>
+            </div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--txt-primary)">{{ val }}</div>
+              <div style="font-size:12px;color:var(--txt-muted)">{{ label }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if current_user.category %}
+      <div class="card">
+        <div class="card-body text-center" style="padding:var(--sp-8)">
+          <div style="font-size:10px;font-weight:700;color:var(--txt-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:var(--sp-4)">YOUR CAREER CATEGORY</div>
+          <span class="cat-badge" style="font-size:15px;padding:10px 22px;display:inline-flex"><i class="fa-solid fa-tag"></i> {{ current_user.category }}</span>
+          <p style="font-size:12px;color:var(--txt-muted);margin-top:var(--sp-3)">Auto-detected from your degree &amp; skills</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-body">
+          <h4 style="color:var(--txt-secondary);margin-bottom:var(--sp-4);font-size:12px;letter-spacing:1px;text-transform:uppercase">Quick Links</h4>
+          <div style="display:flex;flex-direction:column;gap:var(--sp-2)">
+            <a href="{{ url_for('user.upload_resume') }}" class="btn btn-outline btn-block"><i class="fa-solid fa-upload"></i> Upload New Resume</a>
+            <a href="{{ url_for('user.job_listings') }}" class="btn btn-secondary btn-block"><i class="fa-solid fa-briefcase"></i> Browse Jobs</a>
+            <a href="{{ url_for('user.my_applications') }}" class="btn btn-secondary btn-block"><i class="fa-solid fa-list"></i> My Applications</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
