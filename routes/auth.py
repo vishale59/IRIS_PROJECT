@@ -1,88 +1,113 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User
+"""Authentication routes for registration, login, and logout."""
 
-auth_bp = Blueprint('auth', __name__)
+from functools import wraps
+
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+
+from models import User, db
+
+auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
+def login_required(view):
+    """Require an authenticated session before allowing access."""
+
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to continue.", "error")
+            return redirect(url_for("auth.login"))
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+def roles_required(*allowed_roles):
+    """Limit access to a specific set of roles."""
+
+    def decorator(view):
+        @wraps(view)
+        def wrapped_view(*args, **kwargs):
+            if "user_id" not in session:
+                flash("Please log in to continue.", "error")
+                return redirect(url_for("auth.login"))
+            if session.get("user_role") not in allowed_roles:
+                flash("You do not have permission to access that page.", "error")
+                return redirect(url_for("auth.login"))
+            return view(*args, **kwargs)
+
+        return wrapped_view
+
+    return decorator
+
+
+@auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('user.dashboard'))
+    """Create a new user or employer account."""
+    if session.get("user_id"):
+        return redirect(url_for("index"))
 
-    if request.method == 'POST':
-        full_name = request.form.get('full_name', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        confirm = request.form.get('confirm_password', '')
-        role = request.form.get('role', 'jobseeker')
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        role = request.form.get("role", "user")
 
-        # Validation
-        errors = []
-        if not full_name:
-            errors.append("Full name is required.")
-        if not email or '@' not in email:
-            errors.append("A valid email is required.")
-        if len(password) < 8:
-            errors.append("Password must be at least 8 characters.")
-        if password != confirm:
-            errors.append("Passwords do not match.")
-        if role not in ('jobseeker', 'employer'):
-            errors.append("Invalid role selected.")
-        if User.query.filter_by(email=email).first():
-            errors.append("An account with this email already exists.")
+        if not username or not email or not password:
+            flash("All fields are required.", "error")
+            return render_template("auth/register.html")
 
-        if errors:
-            for e in errors:
-                flash(e, 'danger')
-            return render_template('auth/register.html',
-                                   form_data=request.form)
+        if role not in {"user", "employer"}:
+            flash("Invalid account type selected.", "error")
+            return render_template("auth/register.html")
 
-        user = User(full_name=full_name, email=email, role=role)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Account created! Please log in.', 'success')
-        return redirect(url_for('auth.login'))
+        if User.query.filter((User.username == username) | (User.email == email)).first():
+            flash("A user with that username or email already exists.", "error")
+            return render_template("auth/register.html")
 
-    return render_template('auth/register.html', form_data={})
+        try:
+            user = User(username=username, email=email, role=role)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            flash("Registration successful. Please sign in.", "success")
+            return redirect(url_for("auth.login"))
+        except Exception:
+            db.session.rollback()
+            flash("Unable to create your account right now.", "error")
+
+    return render_template("auth/register.html")
 
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
-        return _redirect_by_role(current_user)
+    """Authenticate a user and create a session."""
+    if session.get("user_id"):
+        return redirect(url_for("index"))
 
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        remember = bool(request.form.get('remember'))
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
         user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password) and user.is_active:
-            login_user(user, remember=remember)
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return _redirect_by_role(user)
-        else:
-            flash('Invalid email or password.', 'danger')
+        if not user or not user.check_password(password):
+            flash("Invalid email or password.", "error")
+            return render_template("auth/login.html")
 
-    return render_template('auth/login.html')
+        session.clear()
+        session["user_id"] = user.id
+        session["user_role"] = user.role
+        session["username"] = user.username
+        flash("Welcome back.", "success")
+        return redirect(url_for("index"))
+
+    return render_template("auth/login.html")
 
 
-@auth_bp.route('/logout')
+@auth_bp.route("/logout")
 @login_required
 def logout():
-    logout_user()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login'))
-
-
-def _redirect_by_role(user):
-    if user.role == 'admin':
-        return redirect(url_for('admin.dashboard'))
-    elif user.role == 'employer':
-        return redirect(url_for('employer.dashboard'))
-    else:
-        return redirect(url_for('user.dashboard'))
+    """Clear the active session."""
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("auth.login"))

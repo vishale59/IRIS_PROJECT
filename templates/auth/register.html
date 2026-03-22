@@ -1,118 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Create Account — IRIS</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-</head>
-<body>
-<div class="auth-page">
-  <div class="auth-panel-left">
-    <div class="auth-logo-wrap anim-fade-up">
-      <div class="auth-logo-orb"><i class="fa-solid fa-brain"></i></div>
-      <div class="auth-brand-title">IRIS</div>
-      <div class="auth-brand-sub">Join professionals landing their dream jobs</div>
+<!-- Registration page for the IRIS Job Portal. -->
+{% extends "base.html" %}
+{% set title = "Register | IRIS Job Portal" %}
+{% block content %}
+<section class="hero auth-hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Join the platform</p>
+        <h1>Create your IRIS account.</h1>
+        <p>Choose a user or employer account and get started in under a minute.</p>
     </div>
-    <div class="auth-features anim-fade-up d2">
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-user-tie"></i></div>
-        <div class="auth-feat-text">Job Seekers — AI resume analysis, ATS score &amp; smart job matches</div>
-      </div>
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-building"></i></div>
-        <div class="auth-feat-text">Employers — post jobs &amp; find top-ranked candidates fast</div>
-      </div>
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-bolt"></i></div>
-        <div class="auth-feat-text">Free to use — no credit card, instant access</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="auth-panel-right">
-    <div class="auth-form-card anim-scale">
-      <h2 style="margin-bottom:6px">Create your account</h2>
-      <p class="sub">Free registration — takes less than 2 minutes</p>
-
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat }}">
-            <span class="alert-icon"><i class="fa-solid fa-circle-info"></i></span>
-            <span class="alert-body">{{ msg }}</span>
-            <button class="alert-close">&times;</button>
-          </div>
-        {% endfor %}
-      {% endwith %}
-
-      <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
-        <div class="form-group">
-          <label class="form-label">I am a <span class="req">*</span></label>
-          <div class="role-picker">
-            <input type="radio" name="role" id="r_seeker" value="jobseeker" class="role-radio"
-              {% if form_data.get('role','jobseeker') == 'jobseeker' %}checked{% endif %}>
-            <label for="r_seeker" class="role-tile">
-              <div class="rt-icon"><i class="fa-solid fa-user-tie"></i></div>
-              <span class="rt-label">Job Seeker</span>
+    <div class="panel form-panel">
+        <form method="post" class="form-grid">
+            <label>Username
+                <input type="text" name="username" placeholder="Choose a username" required>
             </label>
-            <input type="radio" name="role" id="r_employer" value="employer" class="role-radio"
-              {% if form_data.get('role') == 'employer' %}checked{% endif %}>
-            <label for="r_employer" class="role-tile">
-              <div class="rt-icon"><i class="fa-solid fa-building"></i></div>
-              <span class="rt-label">Employer</span>
+            <label>Email
+                <input type="email" name="email" placeholder="name@example.com" required>
             </label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Full Name <span class="req">*</span></label>
-          <div class="input-wrap">
-            <i class="input-icon fa-solid fa-user"></i>
-            <input type="text" name="full_name" class="form-control" placeholder="John Doe"
-                   value="{{ form_data.get('full_name','') }}" required/>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Email Address <span class="req">*</span></label>
-          <div class="input-wrap">
-            <i class="input-icon fa-regular fa-envelope"></i>
-            <input type="email" name="email" class="form-control" placeholder="you@example.com"
-                   value="{{ form_data.get('email','') }}" required/>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Password <span class="req">*</span></label>
-            <div class="input-wrap">
-              <i class="input-icon fa-solid fa-lock"></i>
-              <input type="password" name="password" class="form-control" placeholder="Min. 8 chars" required/>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Confirm Password <span class="req">*</span></label>
-            <div class="input-wrap">
-              <i class="input-icon fa-solid fa-lock"></i>
-              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat" required/>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:var(--sp-6)">
-          <i class="fa-solid fa-user-plus"></i> Create Account
-        </button>
-      </form>
-
-      <div class="divider">or</div>
-      <p style="text-align:center;font-size:13.5px;color:var(--txt-muted)">
-        Already have an account?
-        <a href="{{ url_for('auth.login') }}" style="font-weight:700;color:var(--clr-primary)">Sign in</a>
-      </p>
+            <label>Password
+                <input type="password" name="password" placeholder="Create a password" required>
+            </label>
+            <label>Account Type
+                <select name="role" required>
+                    <option value="user">User</option>
+                    <option value="employer">Employer</option>
+                </select>
+            </label>
+            <button type="submit" class="button">Register</button>
+        </form>
+        <p class="muted">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
     </div>
-  </div>
-</div>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-</html>
+</section>
+{% endblock %}

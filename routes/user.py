@@ -1,284 +1,180 @@
+"""User-facing job browsing, resume upload, and job application routes."""
+
 import os
-import json
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
-from flask_login import login_required, current_user
+
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 
-from models import db, Resume, Job, Application
-from services.resume_parser import extract_text_from_resume
-from services.ats_analyzer import analyze_resume, extract_skills_from_text, clean_text
-from services.job_recommender import recommend_jobs, suggest_jobs_from_resume_text
-from services.categorizer import final_category
-from services import mailer
+from models import Application, Job, ResumeData, db
+from routes.auth import login_required, roles_required
+from services.resume_parser import analyze_resume_keywords, extract_text_from_file
 
-user_bp = Blueprint('user', __name__)
-ALLOWED = {'pdf', 'docx', 'doc'}
+user_bp = Blueprint("user", __name__, url_prefix="/user")
 
 
-def _allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED
-
-
-@user_bp.route('/dashboard')
+@user_bp.route("/dashboard")
 @login_required
+@roles_required("user")
 def dashboard():
-    if current_user.role not in ('jobseeker',):
-        return redirect(url_for('auth.login'))
-
-    resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.uploaded_at.desc()).all()
-    applications = (Application.query
-                    .filter_by(user_id=current_user.id)
-                    .order_by(Application.applied_at.desc())
-                    .limit(5).all())
-
-    recommended = []
-    extracted_skills = []
-    role_suggestions = {
-        'recommended': [],
-        'alternative': [],
-        'primary': [],
-        'details': [],
-        'best_match': None,
-    }
-    primary = next((r for r in resumes if r.is_primary), resumes[0] if resumes else None)
-    if primary and primary.extracted_text:
-        all_jobs = Job.query.filter_by(is_active=True).all()
-        recommended = recommend_jobs(primary.extracted_text, all_jobs, top_n=6)
-        extracted_skills = extract_skills_from_text(clean_text(primary.extracted_text))
-        role_suggestions = suggest_jobs_from_resume_text(primary.extracted_text)
-
-    stats = {
-        'total_applications': Application.query.filter_by(user_id=current_user.id).count(),
-        'pending':     Application.query.filter_by(user_id=current_user.id, status='Applied').count(),
-        'shortlisted': Application.query.filter_by(user_id=current_user.id, status='Selected').count(),
-        'hired':       Application.query.filter_by(user_id=current_user.id, status='Hired').count(),
-    }
-
-    return render_template('user/dashboard.html',
-                           resumes=resumes,
-                           applications=applications,
-                           recommended=recommended,
-                           extracted_skills=extracted_skills,
-                           role_suggestions=role_suggestions,
-                           stats=stats,
-                           primary_resume=primary)
+    """Render the user dashboard."""
+    user_id = session["user_id"]
+    resumes = ResumeData.query.filter_by(user_id=user_id).order_by(ResumeData.uploaded_at.desc()).all()
+    applications = (
+        Application.query.filter_by(user_id=user_id)
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    jobs = Job.query.order_by(Job.created_at.desc()).all()
+    return render_template(
+        "user/dashboard.html",
+        resumes=resumes,
+        applications=applications,
+        jobs=jobs[:5],
+    )
 
 
-@user_bp.route('/resume/upload', methods=['GET', 'POST'])
+@user_bp.route("/jobs")
 @login_required
+@roles_required("user")
+def job_listings():
+    """List available jobs."""
+    jobs = Job.query.order_by(Job.created_at.desc()).all()
+    applied_job_ids = {
+        application.job_id
+        for application in Application.query.filter_by(user_id=session["user_id"]).all()
+    }
+    return render_template("user/job_listings.html", jobs=jobs, applied_job_ids=applied_job_ids)
+
+
+@user_bp.route("/resume/upload", methods=["GET", "POST"])
+@login_required
+@roles_required("user")
 def upload_resume():
-    if request.method == 'POST':
-        if 'resume' not in request.files:
-            flash('No file selected.', 'danger')
-            return redirect(request.url)
+    """Upload a resume and store extracted analysis data."""
+    if request.method == "POST":
+        uploaded_file = request.files.get("resume")
+        if not uploaded_file or uploaded_file.filename == "":
+            flash("Please choose a resume file to upload.", "error")
+            return redirect(url_for("user.upload_resume"))
 
-        file = request.files['resume']
-        jd_text = request.form.get('job_description', '')
-        degree  = request.form.get('degree', '').strip()
+        if not _allowed_file(uploaded_file.filename):
+            flash("Only PDF, DOC, and DOCX files are allowed.", "error")
+            return redirect(url_for("user.upload_resume"))
 
-        if file.filename == '':
-            flash('No file selected.', 'danger')
-            return redirect(request.url)
-
-        if not _allowed_file(file.filename):
-            flash('Unsupported format. Please upload PDF or DOCX.', 'danger')
-            return redirect(request.url)
-
-        ext = file.filename.rsplit('.', 1)[1].lower()
-        unique_name = f"{uuid.uuid4().hex}.{ext}"
-        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name)
-        file.save(save_path)
+        safe_name = secure_filename(uploaded_file.filename)
+        unique_name = f"{uuid.uuid4().hex}_{safe_name}"
+        stored_path = os.path.join(current_app.config["UPLOAD_FOLDER"], unique_name)
+        uploaded_file.save(stored_path)
 
         try:
-            text = extract_text_from_resume(save_path)
-        except Exception as e:
-            os.remove(save_path)
-            flash(f'Could not read resume: {str(e)}', 'danger')
-            return redirect(request.url)
+            extracted_text = extract_text_from_file(stored_path)
+            analysis = analyze_resume_keywords(extracted_text)
+            resume_data = ResumeData(
+                user_id=session["user_id"],
+                extracted_text=extracted_text or "No readable text found.",
+                file_name=unique_name,
+                original_name=safe_name,
+                score=analysis["score"],
+                keywords=", ".join(analysis["keywords"]),
+            )
+            db.session.add(resume_data)
+            db.session.commit()
+            flash("Resume uploaded and analyzed successfully.", "success")
+            return redirect(url_for("user.resume_result", resume_id=resume_data.id))
+        except Exception:
+            db.session.rollback()
+            if os.path.exists(stored_path):
+                os.remove(stored_path)
+            flash("The resume could not be processed.", "error")
 
-        if not text or len(text.strip()) < 50:
-            os.remove(save_path)
-            flash('Resume appears empty or unreadable. Please upload a text-based PDF/DOCX.', 'danger')
-            return redirect(request.url)
-
-        result   = analyze_resume(text, jd_text)
-        category = final_category(degree, text)
-
-        # Update user degree/category if provided
-        if degree:
-            current_user.degree   = degree
-            current_user.category = category
-
-        Resume.query.filter_by(user_id=current_user.id, is_primary=True).update({'is_primary': False})
-
-        resume = Resume(
-            user_id=current_user.id,
-            filename=unique_name,
-            original_name=secure_filename(file.filename),
-            file_path=save_path,
-            extracted_text=text,
-            ats_score=result['ats_score'],
-            matched_skills=json.dumps(result['matched_skills']),
-            missing_skills=json.dumps(result['missing_skills']),
-            suggestions=json.dumps(result['suggestions']),
-            detected_category=category,
-            is_primary=True,
-        )
-        db.session.add(resume)
-        db.session.commit()
-
-        flash('Resume uploaded and analyzed successfully!', 'success')
-        return redirect(url_for('user.resume_result', resume_id=resume.id))
-
-    return render_template('user/upload_resume.html')
+    return render_template("user/upload_resume.html")
 
 
-@user_bp.route('/resume/<int:resume_id>')
+@user_bp.route("/resume/<int:resume_id>")
 @login_required
-def resume_result(resume_id):
-    resume = Resume.query.get_or_404(resume_id)
-    if resume.user_id != current_user.id:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('user.dashboard'))
-
-    matched     = json.loads(resume.matched_skills or '[]')
-    missing     = json.loads(resume.missing_skills or '[]')
-    suggestions = json.loads(resume.suggestions    or '[]')
-    job_suggestions = suggest_jobs_from_resume_text(resume.extracted_text)
-
-    return render_template('user/resume_result.html',
-                           resume=resume,
-                           matched=matched,
-                           missing=missing,
-                           suggestions=suggestions,
-                           job_suggestions=job_suggestions)
+@roles_required("user")
+def resume_result(resume_id: int):
+    """Display a resume analysis result."""
+    resume = ResumeData.query.get_or_404(resume_id)
+    if resume.user_id != session["user_id"]:
+        flash("You cannot access that resume.", "error")
+        return redirect(url_for("user.dashboard"))
+    return render_template("user/resume_result.html", resume=resume)
 
 
-@user_bp.route('/jobs')
+@user_bp.route("/jobs/<int:job_id>")
 @login_required
-def job_listings():
-    search   = request.args.get('q', '')
-    location = request.args.get('location', '')
-    job_type = request.args.get('type', '')
-    category = request.args.get('category', '')
-
-    query = Job.query.filter_by(is_active=True)
-    if search:
-        query = query.filter(
-            db.or_(Job.title.ilike(f'%{search}%'),
-                   Job.company.ilike(f'%{search}%'),
-                   Job.description.ilike(f'%{search}%'))
-        )
-    if location:
-        query = query.filter(Job.location.ilike(f'%{location}%'))
-    if job_type:
-        query = query.filter_by(job_type=job_type)
-    if category:
-        query = query.filter(Job.category.ilike(f'%{category}%'))
-
-    jobs = query.order_by(Job.created_at.desc()).all()
-    applied_ids = {a.job_id for a in Application.query.filter_by(user_id=current_user.id).all()}
-
-    return render_template('user/job_listings.html',
-                           jobs=jobs,
-                           applied_ids=applied_ids,
-                           search=search,
-                           location=location,
-                           job_type=job_type,
-                           category=category)
-
-
-@user_bp.route('/jobs/<int:job_id>')
-@login_required
-def job_detail(job_id):
+@roles_required("user")
+def job_detail(job_id: int):
+    """Show details for a single job."""
     job = Job.query.get_or_404(job_id)
-    resumes = Resume.query.filter_by(user_id=current_user.id).all()
-    already_applied = Application.query.filter_by(
-        user_id=current_user.id, job_id=job_id).first() is not None
-
-    skill_gap = None
-    primary = next((r for r in resumes if r.is_primary), resumes[0] if resumes else None)
-    if primary and primary.extracted_text:
-        from services.job_recommender import get_skill_gap
-        skill_gap = get_skill_gap(primary.extracted_text, job)
-
-    return render_template('user/job_detail.html',
-                           job=job,
-                           resumes=resumes,
-                           already_applied=already_applied,
-                           skill_gap=skill_gap)
-
-
-@user_bp.route('/jobs/<int:job_id>/apply', methods=['POST'])
-@login_required
-def apply_job(job_id):
-    job = Job.query.get_or_404(job_id)
-
-    if Application.query.filter_by(user_id=current_user.id, job_id=job_id).first():
-        flash('You have already applied for this job.', 'warning')
-        return redirect(url_for('user.job_detail', job_id=job_id))
-
-    resume_id    = request.form.get('resume_id')
-    cover_letter = request.form.get('cover_letter', '')
-
-    resume    = None
-    ats_match = 0.0
-    if resume_id:
-        resume = Resume.query.get(int(resume_id))
-        if resume and resume.user_id == current_user.id and resume.extracted_text:
-            jd_text   = f"{job.title} {job.description} {job.skills_required or ''}"
-            result    = analyze_resume(resume.extracted_text, jd_text)
-            ats_match = result['ats_score']
-
-    application = Application(
-        user_id=current_user.id,
-        job_id=job_id,
-        resume_id=resume.id if resume else None,
-        cover_letter=cover_letter,
-        ats_match_score=ats_match,
-        status='Applied',
+    latest_resume = (
+        ResumeData.query.filter_by(user_id=session["user_id"])
+        .order_by(ResumeData.uploaded_at.desc())
+        .first()
     )
-    db.session.add(application)
-    db.session.commit()
+    has_applied = Application.query.filter_by(user_id=session["user_id"], job_id=job_id).first()
+    return render_template(
+        "user/job_detail.html",
+        job=job,
+        latest_resume=latest_resume,
+        has_applied=has_applied,
+    )
+
+
+@user_bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
+@login_required
+@roles_required("user")
+def apply_job(job_id: int):
+    """Apply for a job with the latest uploaded resume."""
+    job = Job.query.get_or_404(job_id)
+    user_id = session["user_id"]
+
+    if Application.query.filter_by(user_id=user_id, job_id=job_id).first():
+        flash("You have already applied for this job.", "error")
+        return redirect(url_for("user.job_detail", job_id=job_id))
+
+    latest_resume = (
+        ResumeData.query.filter_by(user_id=user_id)
+        .order_by(ResumeData.uploaded_at.desc())
+        .first()
+    )
+    if not latest_resume:
+        flash("Please upload a resume before applying.", "error")
+        return redirect(url_for("user.upload_resume"))
 
     try:
-        mailer.notify_application_submitted(current_user.email, current_user.full_name, job)
-        employer = job.poster
-        if employer:
-            mailer.notify_application_received(current_user, job, employer.email)
-    except Exception:
-        pass
-
-    flash(f'Application submitted for {job.title}!', 'success')
-    return redirect(url_for('user.my_applications'))
-
-
-@user_bp.route('/my-applications')
-@login_required
-def my_applications():
-    applications = (Application.query
-                    .filter_by(user_id=current_user.id)
-                    .order_by(Application.applied_at.desc())
-                    .all())
-    return render_template('user/my_applications.html', applications=applications)
-
-
-@user_bp.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    if request.method == 'POST':
-        current_user.full_name = request.form.get('full_name', current_user.full_name).strip()
-        current_user.phone     = request.form.get('phone', '').strip()
-        current_user.location  = request.form.get('location', '').strip()
-        current_user.bio       = request.form.get('bio', '').strip()
-        current_user.degree    = request.form.get('degree', '').strip()
-        # Recalculate category if degree changed
-        if current_user.degree:
-            from services.categorizer import detect_degree_category
-            cat = detect_degree_category(current_user.degree)
-            if cat:
-                current_user.category = cat
+        analysis = analyze_resume_keywords(latest_resume.extracted_text, job.description)
+        application = Application(
+            user_id=user_id,
+            job_id=job.id,
+            resume_path=os.path.join("uploads", latest_resume.file_name),
+            score=analysis["score"],
+        )
+        db.session.add(application)
         db.session.commit()
-        flash('Profile updated.', 'success')
-    return render_template('user/profile.html')
+        flash("Application submitted successfully.", "success")
+    except Exception:
+        db.session.rollback()
+        flash("Unable to submit the application.", "error")
+
+    return redirect(url_for("user.my_applications"))
+
+
+@user_bp.route("/applications")
+@login_required
+@roles_required("user")
+def my_applications():
+    """List applications for the logged-in user."""
+    applications = (
+        Application.query.filter_by(user_id=session["user_id"])
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    return render_template("user/my_applications.html", applications=applications)
+
+
+def _allowed_file(filename: str) -> bool:
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    return extension in current_app.config["ALLOWED_EXTENSIONS"]

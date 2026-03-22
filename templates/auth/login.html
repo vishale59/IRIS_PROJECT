@@ -1,125 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign In - IRIS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-</head>
-<body>
-<div class="auth-page">
-
-  <div class="auth-panel-left">
-    <div class="auth-logo-wrap anim-fade-up">
-      <div class="auth-logo-orb"><i class="fa-solid fa-brain"></i></div>
-      <div class="auth-brand-title">IRIS</div>
-      <div class="auth-brand-sub">AI-Powered Job Portal &amp; Resume Analyzer</div>
+<!-- Login page for the IRIS Job Portal. -->
+{% extends "base.html" %}
+{% set title = "Login | IRIS Job Portal" %}
+{% block content %}
+<section class="hero auth-hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Smart hiring starts here</p>
+        <h1>Sign in to your IRIS workspace.</h1>
+        <p>Access your job dashboard, hiring panel, or admin console with one secure login.</p>
     </div>
-
-    <div class="auth-features anim-fade-up d2">
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-robot"></i></div>
-        <div class="auth-feat-text">AI-powered ATS scoring with keyword and semantic analysis</div>
-      </div>
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-layer-group"></i></div>
-        <div class="auth-feat-text">Alternative role suggestions based on extracted skills and resume strength</div>
-      </div>
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-bullseye"></i></div>
-        <div class="auth-feat-text">Professional dashboards for job seekers, employers, and administrators</div>
-      </div>
-      <div class="auth-feat-item">
-        <div class="auth-feat-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
-        <div class="auth-feat-text">Real-time email notifications on every status update</div>
-      </div>
+    <div class="panel form-panel">
+        <form method="post" class="form-grid">
+            <label>Email
+                <input type="email" name="email" placeholder="name@example.com" required>
+            </label>
+            <label>Password
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </label>
+            <button type="submit" class="button">Login</button>
+        </form>
+        <p class="muted">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
     </div>
-  </div>
-
-  <div class="auth-panel-right">
-    <div class="auth-form-card anim-scale">
-      <h2 style="margin-bottom:6px">Welcome back</h2>
-      <p class="sub">Sign in to your IRIS account to continue</p>
-
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat }}">
-            <span class="alert-icon"><i class="fa-solid fa-circle-info"></i></span>
-            <span class="alert-body">{{ msg }}</span>
-            <button class="alert-close">&times;</button>
-          </div>
-        {% endfor %}
-      {% endwith %}
-
-      <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
-        <div class="form-group">
-          <label class="form-label">Email address</label>
-          <div class="input-wrap">
-            <i class="input-icon fa-regular fa-envelope"></i>
-            <input type="email" name="email" id="login-email" class="form-control" placeholder="you@example.com" required autofocus/>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <div class="input-wrap" style="position:relative">
-            <i class="input-icon fa-solid fa-lock"></i>
-            <input type="password" name="password" id="login-password" class="form-control" placeholder="********" required style="padding-right:48px"/>
-            <button type="button" class="btn-pwd-toggle" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt-muted);cursor:pointer;padding:4px;font-size:15px">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="d-flex items-center justify-between mb-5" style="margin-bottom:var(--sp-5)">
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-secondary);cursor:pointer">
-            <input type="checkbox" name="remember" style="accent-color:var(--clr-primary)"/> Remember me
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-lg btn-block">
-          <i class="fa-solid fa-right-to-bracket"></i> Sign In
-        </button>
-      </form>
-
-      <div class="divider">or</div>
-      <p style="text-align:center;font-size:13.5px;color:var(--txt-muted)">
-        Don't have an account?
-        <a href="{{ url_for('auth.register') }}" style="font-weight:700;color:var(--clr-primary)">Create one free</a>
-      </p>
-
-      <div class="demo-box mt-5">
-        <div class="demo-box-title">Demo Accounts</div>
-        <p class="demo-box-sub">Choose a role to auto-fill credentials instantly.</p>
-        <div class="demo-actions">
-          <button type="button" class="demo-login-btn admin" data-demo-email="admin@iris.com" data-demo-password="Admin@1234">
-            <span class="demo-login-icon"><i class="fa-solid fa-shield-halved"></i></span>
-            <span>
-              <strong>Login as Admin</strong>
-              <small>Manage users, jobs, and analytics</small>
-            </span>
-          </button>
-          <button type="button" class="demo-login-btn employer" data-demo-email="employer@iris.com" data-demo-password="Employer@1234">
-            <span class="demo-login-icon"><i class="fa-solid fa-building"></i></span>
-            <span>
-              <strong>Login as Employer</strong>
-              <small>Post openings and review applications</small>
-            </span>
-          </button>
-          <button type="button" class="demo-login-btn jobseeker" data-demo-email="jobseeker@iris.com" data-demo-password="Jobseeker@1234">
-            <span class="demo-login-icon"><i class="fa-solid fa-user-tie"></i></span>
-            <span>
-              <strong>Login as Job Seeker</strong>
-              <small>Explore resume insights and smart matches</small>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-</html>
+</section>
+{% endblock %}

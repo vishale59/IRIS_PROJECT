@@ -1,328 +1,78 @@
+<!-- User dashboard page. -->
 {% extends "base.html" %}
-{% block title %}Dashboard - IRIS{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-
+{% set title = "User Dashboard | IRIS Job Portal" %}
 {% block content %}
-<div class="dashboard-hero anim-fade-up">
-  <div class="dashboard-hero-copy">
-    <span class="hero-kicker">AI Resume Analyzer + Job Portal</span>
-    <h1 class="grad-text">Welcome back, {{ current_user.full_name.split()[0] }}</h1>
-    <p>Your career cockpit is ready with extracted skills, role suggestions, and live job matches from your latest resume.</p>
-    <div class="hero-actions">
-      <a href="{{ url_for('user.upload_resume') }}" class="btn btn-primary">
-        <i class="fa-solid fa-upload"></i> Upload Resume
-      </a>
-      <a href="{{ url_for('user.job_listings') }}" class="btn btn-secondary">
-        <i class="fa-solid fa-briefcase"></i> Explore Jobs
-      </a>
-    </div>
-  </div>
-  <div class="hero-insights">
-    <div class="hero-insight-card">
-      <span>Detected Category</span>
-      <strong>{{ current_user.category or (primary_resume.detected_category if primary_resume else 'Pending Analysis') }}</strong>
-    </div>
-    <div class="hero-insight-card">
-      <span>Skills Tracked</span>
-      <strong>{{ extracted_skills|length }}</strong>
-    </div>
-    <div class="hero-insight-card">
-      <span>Best Role Match</span>
-      <strong>{{ role_suggestions.best_match or 'Upload Resume' }}</strong>
-    </div>
-  </div>
-</div>
-
-<div class="stat-grid anim-fade-up d1">
-  <div class="stat-card blue">
-    <div class="stat-icon-wrap"><i class="fa-solid fa-paper-plane"></i></div>
-    <div class="stat-body">
-      <div class="stat-value" data-count="{{ stats.total_applications }}">{{ stats.total_applications }}</div>
-      <div class="stat-label">Applications Sent</div>
-    </div>
-  </div>
-  <div class="stat-card orange">
-    <div class="stat-icon-wrap"><i class="fa-solid fa-clock-rotate-left"></i></div>
-    <div class="stat-body">
-      <div class="stat-value" data-count="{{ stats.pending }}">{{ stats.pending }}</div>
-      <div class="stat-label">Under Review</div>
-    </div>
-  </div>
-  <div class="stat-card purple">
-    <div class="stat-icon-wrap"><i class="fa-solid fa-star"></i></div>
-    <div class="stat-body">
-      <div class="stat-value" data-count="{{ stats.shortlisted }}">{{ stats.shortlisted }}</div>
-      <div class="stat-label">Selected</div>
-    </div>
-  </div>
-  <div class="stat-card green">
-    <div class="stat-icon-wrap"><i class="fa-solid fa-trophy"></i></div>
-    <div class="stat-body">
-      <div class="stat-value" data-count="{{ stats.hired }}">{{ stats.hired }}</div>
-      <div class="stat-label">Hired</div>
-    </div>
-  </div>
-  {% if primary_resume %}
-  <div class="stat-card cyan">
-    <div class="stat-icon-wrap"><i class="fa-solid fa-chart-simple"></i></div>
-    <div class="stat-body">
-      <div class="stat-value">{{ primary_resume.ats_score|round|int }}<span style="font-size:1rem">%</span></div>
-      <div class="stat-label">ATS Score</div>
-    </div>
-  </div>
-  {% endif %}
-</div>
-
-<div class="grid-2 anim-fade-up d2">
-  <div class="card">
-    <div class="card-header">
-      <div class="card-header-title">
-        <div class="card-icon card-icon-purple"><i class="fa-solid fa-sparkles"></i></div>
-        <h3>Career Overview</h3>
-      </div>
-      {% if role_suggestions.best_match %}
-      <span class="badge badge-success">Best Match: {{ role_suggestions.best_match }}</span>
-      {% endif %}
-    </div>
-    <div class="card-body">
-      {% if extracted_skills %}
-      <div class="dashboard-panel-block">
-        <div class="dashboard-panel-label">Extracted Skills</div>
-        <div class="chip-group">
-          {% for skill in extracted_skills[:12] %}
-          <span class="chip chip-primary"><i class="fa-solid fa-code"></i> {{ skill }}</span>
-          {% endfor %}
-          {% if extracted_skills|length > 12 %}
-          <span class="chip">+{{ extracted_skills|length - 12 }} more</span>
-          {% endif %}
+<section class="dashboard-grid">
+    <article class="panel hero-panel">
+        <p class="eyebrow">Candidate dashboard</p>
+        <h1>Welcome, {{ session.get('username') }}.</h1>
+        <p>Track resume insights, discover jobs, and keep your application flow moving.</p>
+        <div class="chip-row">
+            <span class="chip">Resumes {{ resumes|length }}</span>
+            <span class="chip">Applications {{ applications|length }}</span>
+            <span class="chip">Open Jobs {{ jobs|length }}</span>
         </div>
-      </div>
-
-      <div class="dashboard-panel-block">
-        <div class="dashboard-panel-label">Recommended Jobs</div>
-        {% if role_suggestions.recommended %}
-        <div class="career-card-grid">
-          {% for role in role_suggestions.recommended %}
-          {% set role_detail = (role_suggestions.details | selectattr('role', 'equalto', role) | list | first) %}
-          <div class="career-mini-card {% if role == role_suggestions.best_match %}highlight{% endif %}">
-            <div class="career-mini-top">
-              <div class="career-mini-icon"><i class="fa-solid {{ role_detail.icon if role_detail else 'fa-briefcase' }}"></i></div>
-              <div>
-                <div class="career-mini-title">{{ role }}</div>
-                <div class="career-mini-sub">{% if role == role_suggestions.best_match %}Top fit for your profile{% else %}Strong skill alignment{% endif %}</div>
-              </div>
-            </div>
-            {% if role_detail and role_detail.matched_skills %}
-            <div class="chip-group">
-              {% for skill in role_detail.matched_skills[:3] %}
-              <span class="chip chip-success">{{ skill }}</span>
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-          {% endfor %}
-        </div>
+    </article>
+    <article class="panel">
+        <h2>Latest Resume Analysis</h2>
+        {% if resumes %}
+            <p class="metric">{{ resumes[0].score }}%</p>
+            <p>{{ resumes[0].original_name }}</p>
+            <p class="muted">Keywords: {{ resumes[0].keywords or "No keywords extracted" }}</p>
+            <a class="text-link" href="{{ url_for('user.resume_result', resume_id=resumes[0].id) }}">View analysis</a>
         {% else %}
-        <p class="text-secondary">Upload a resume to generate recommended job roles from your extracted skills.</p>
+            <p class="muted">Upload a resume to generate an AI-powered skill score.</p>
         {% endif %}
-      </div>
+    </article>
+</section>
 
-      <div class="dashboard-panel-block">
-        <div class="dashboard-panel-label">Alternative Jobs</div>
-        {% if role_suggestions.alternative %}
-        <div class="chip-group">
-          {% for role in role_suggestions.alternative %}
-          {% set role_detail = (role_suggestions.details | selectattr('role', 'equalto', role) | list | first) %}
-          <span class="chip dashboard-alt-chip">
-            <i class="fa-solid {{ role_detail.icon if role_detail else 'fa-briefcase' }}"></i> {{ role }}
-          </span>
-          {% endfor %}
+<section class="grid-two">
+    <article class="panel">
+        <div class="section-head">
+            <h2>Recommended Jobs</h2>
+            <a class="text-link" href="{{ url_for('user.job_listings') }}">View all</a>
         </div>
-        {% else %}
-        <p class="text-secondary">Alternative career paths will appear here once enough skills are extracted.</p>
-        {% endif %}
-      </div>
-      {% else %}
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
-        <h3>Build your first skill profile</h3>
-        <p>Upload your resume to see extracted skills, recommended jobs, and alternative career options.</p>
-        <a href="{{ url_for('user.upload_resume') }}" class="btn btn-primary">
-          <i class="fa-solid fa-upload"></i> Upload Resume
-        </a>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <div class="card-header-title">
-        <div class="card-icon card-icon-primary"><i class="fa-solid fa-file-lines"></i></div>
-        <h3>My Resumes</h3>
-      </div>
-      <a href="{{ url_for('user.upload_resume') }}" class="btn btn-primary btn-sm">
-        <i class="fa-solid fa-plus"></i> Upload
-      </a>
-    </div>
-    <div class="card-body p-0">
-      {% if resumes %}
-        {% for r in resumes[:3] %}
-        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-6);border-bottom:1px solid var(--border-subtle)">
-          <div style="width:42px;height:42px;border-radius:var(--r-lg);background:{% if r.is_primary %}linear-gradient(135deg,var(--clr-primary),var(--clr-secondary)){% else %}var(--bg-elevated){% endif %};display:flex;align-items:center;justify-content:center;color:{% if r.is_primary %}#fff{% else %}var(--txt-muted){% endif %};flex-shrink:0">
-            <i class="fa-solid fa-file-pdf" style="font-size:16px"></i>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div class="truncate" style="font-size:13px;font-weight:600;color:var(--txt-primary)">
-              {{ r.original_name or r.filename }}
-              {% if r.is_primary %}<span class="badge badge-primary" style="margin-left:6px">Primary</span>{% endif %}
-            </div>
-            <div style="font-size:11.5px;color:var(--txt-muted);margin-top:2px;display:flex;align-items:center;gap:var(--sp-3)">
-              <span>{{ r.uploaded_at.strftime('%b %d, %Y') }}</span>
-              <span style="color:{% if r.ats_score >= 75 %}var(--clr-success){% elif r.ats_score >= 50 %}var(--clr-primary){% else %}var(--clr-danger){% endif %};font-weight:700">
-                ATS {{ r.ats_score|round|int }}%
-              </span>
-              {% if r.detected_category %}<span class="cat-badge" style="font-size:10px;padding:2px 8px">{{ r.detected_category }}</span>{% endif %}
-            </div>
-          </div>
-          <a href="{{ url_for('user.resume_result', resume_id=r.id) }}" class="btn btn-secondary btn-sm">View</a>
+        <div class="card-list">
+            {% for job in jobs %}
+                <div class="job-card">
+                    <h3>{{ job.title }}</h3>
+                    <p>{{ job.description[:160] }}{% if job.description|length > 160 %}...{% endif %}</p>
+                    <a class="button secondary" href="{{ url_for('user.job_detail', job_id=job.id) }}">Open Job</a>
+                </div>
+            {% else %}
+                <p class="muted">No jobs available yet.</p>
+            {% endfor %}
         </div>
-        {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-state-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
-          <h3>No resume yet</h3>
-          <p>Upload your resume to get an AI-powered ATS score and personalized job recommendations.</p>
-          <a href="{{ url_for('user.upload_resume') }}" class="btn btn-primary">
-            <i class="fa-solid fa-upload"></i> Upload Now
-          </a>
+    </article>
+    <article class="panel">
+        <div class="section-head">
+            <h2>Recent Applications</h2>
+            <a class="text-link" href="{{ url_for('user.my_applications') }}">See history</a>
         </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<div class="grid-2 anim-fade-up d3" style="margin-top:var(--sp-6)">
-  <div class="card">
-    <div class="card-header">
-      <div class="card-header-title">
-        <div class="card-icon card-icon-success"><i class="fa-solid fa-list-check"></i></div>
-        <h3>Recent Applications</h3>
-      </div>
-      <a href="{{ url_for('user.my_applications') }}" class="btn btn-secondary btn-sm">View All</a>
-    </div>
-    <div class="card-body p-0">
-      {% if applications %}
-        {% for app in applications %}
-        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-6);border-bottom:1px solid var(--border-subtle)">
-          <div class="company-avatar" style="width:38px;height:38px;font-size:14px;border-radius:var(--r-md)">{{ app.job.company[0].upper() }}</div>
-          <div style="flex:1;min-width:0">
-            <div class="truncate" style="font-size:13px;font-weight:600;color:var(--txt-primary)">{{ app.job.title }}</div>
-            <div style="font-size:11.5px;color:var(--txt-muted)">{{ app.job.company }}</div>
-          </div>
-          <span class="status-pill sp-{{ app.status|lower }}">{{ app.status }}</span>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Match Score</th>
+                        <th>Applied</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                        <tr>
+                            <td>{{ application.job.title }}</td>
+                            <td>{{ application.score }}%</td>
+                            <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No applications submitted yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-state-icon"><i class="fa-solid fa-paper-plane"></i></div>
-          <h3>No applications yet</h3>
-          <p>Browse jobs and track your progress here.</p>
-          <a href="{{ url_for('user.job_listings') }}" class="btn btn-primary">
-            <i class="fa-solid fa-search"></i> Browse Jobs
-          </a>
-        </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <div class="card-header-title">
-        <div class="card-icon card-icon-info"><i class="fa-solid fa-lightbulb"></i></div>
-        <h3>Resume Snapshot</h3>
-      </div>
-    </div>
-    <div class="card-body">
-      {% if primary_resume %}
-      <div class="resume-snapshot-grid">
-        <div class="resume-snapshot-item">
-          <span>Primary Resume</span>
-          <strong>{{ primary_resume.original_name or primary_resume.filename }}</strong>
-        </div>
-        <div class="resume-snapshot-item">
-          <span>Uploaded</span>
-          <strong>{{ primary_resume.uploaded_at.strftime('%b %d, %Y') }}</strong>
-        </div>
-        <div class="resume-snapshot-item">
-          <span>Detected Category</span>
-          <strong>{{ primary_resume.detected_category or 'General' }}</strong>
-        </div>
-        <div class="resume-snapshot-item">
-          <span>Suggested Roles</span>
-          <strong>{{ role_suggestions.recommended|length }}</strong>
-        </div>
-      </div>
-      {% else %}
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-        <h3>Smart insights will appear here</h3>
-        <p>Once you upload a resume, IRIS will analyze skills and generate career recommendations automatically.</p>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-{% if recommended %}
-<div class="card scroll-reveal" style="margin-top:var(--sp-6)">
-  <div class="card-header">
-    <div class="card-header-title">
-      <div class="card-icon card-icon-purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-      <div>
-        <h3>AI Job Recommendations</h3>
-      </div>
-    </div>
-    <span class="badge badge-purple badge-lg">Based on your resume</span>
-  </div>
-  <div class="card-body">
-    <div class="jobs-grid">
-      {% for rec in recommended %}
-      {% set job = rec.job %}
-      {% set score = rec.score %}
-      <div class="job-card">
-        <div class="job-card-top">
-          <div class="company-avatar">{{ job.company[0].upper() }}</div>
-          <div class="job-title-wrap">
-            <div class="job-title">{{ job.title }}</div>
-            <div class="job-company">{{ job.company }}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:1.1rem;font-weight:800;color:{% if score >= 75 %}var(--clr-success){% elif score >= 50 %}var(--clr-primary){% else %}var(--clr-warning){% endif %}">{{ score|round|int }}%</div>
-            <div style="font-size:10px;color:var(--txt-muted);font-weight:500">match</div>
-          </div>
-        </div>
-        <div class="progress-track"><div class="progress-fill" data-pct="{{ score|round|int }}" style="width:0"></div></div>
-        <div class="job-meta-row">
-          {% if job.location %}<span class="job-meta-item"><i class="fa-solid fa-location-dot"></i> {{ job.location }}</span>{% endif %}
-          <span class="job-meta-item">{{ job.job_type }}</span>
-          {% if job.category %}<span class="cat-badge" style="font-size:10px;padding:3px 9px">{{ job.category }}</span>{% endif %}
-        </div>
-        {% if rec.matched_skills %}
-        <div class="chip-group">
-          {% for s in rec.matched_skills[:3] %}<span class="chip chip-primary">{{ s }}</span>{% endfor %}
-          {% if rec.matched_skills|length > 3 %}<span class="chip">+{{ rec.matched_skills|length - 3 }}</span>{% endif %}
-        </div>
-        {% endif %}
-        <div class="job-footer">
-          <a href="{{ url_for('user.job_detail', job_id=job.id) }}" class="btn btn-primary btn-sm" style="flex:1">
-            <i class="fa-solid fa-arrow-right"></i> View &amp; Apply
-          </a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
+    </article>
+</section>
 {% endblock %}

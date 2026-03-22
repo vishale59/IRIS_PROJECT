@@ -1,4 +1,7 @@
+"""Application configuration for the IRIS Job Portal."""
+
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -6,37 +9,53 @@ load_dotenv()
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'iris-secret-key-change-in-production')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
-    ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}
+def _build_database_uri() -> str:
+    """Build a SQLAlchemy connection string from environment variables."""
+    explicit_uri = os.getenv("DATABASE_URL")
+    if explicit_uri:
+        return explicit_uri
 
-    # Flask-Mail
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'iris@jobportal.com')
+    if os.getenv("USE_SQLITE_FALLBACK", "true").lower() == "true":
+        return os.getenv(
+            "SQLITE_DATABASE_URI",
+            f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'iris_job_portal.db')}",
+        )
+
+    db_driver = os.getenv("DB_DRIVER", "mysql+pymysql")
+    db_user = os.getenv("DB_USER", "root")
+    db_password = os.getenv("DB_PASSWORD", "password")
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = os.getenv("DB_PORT", "3306")
+    db_name = os.getenv("DB_NAME", "iris_job_portal")
+    return f"{db_driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+
+class Config:
+    """Base configuration shared across environments."""
+
+    SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-key")
+    SQLALCHEMY_DATABASE_URI = _build_database_uri()
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 8 * 1024 * 1024))
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", os.path.join(BASE_DIR, "uploads"))
+    ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
+    APP_NAME = "IRIS Job Portal"
 
 
 class DevelopmentConfig(Config):
+    """Development defaults."""
+
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'iris_dev.db')
 
 
 class ProductionConfig(Config):
+    """Production defaults."""
+
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'iris.db')
-    )
 
 
 config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "default": DevelopmentConfig,
 }

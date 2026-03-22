@@ -1,77 +1,39 @@
+<!-- User applications page. -->
 {% extends "base.html" %}
-{% block title %}My Applications — IRIS{% endblock %}
-{% block page_title %}My Applications{% endblock %}
-
+{% set title = "My Applications | IRIS Job Portal" %}
 {% block content %}
-<div class="page-header anim-fade-up">
-  <h1>My Applications</h1>
-  <p>Track all your job applications and their live status</p>
-</div>
-
-{% if applications %}
-<div class="card anim-fade-up d1">
-  <div class="card-body p-0">
-    <div class="table-scroll">
-      <table class="iris-table">
-        <thead>
-          <tr>
-            <th>Job</th><th>Company</th><th>Category</th>
-            <th>ATS Match</th><th>Status</th><th>Applied</th><th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for app in applications %}
-          <tr>
-            <td>
-              <div style="font-weight:600;color:var(--txt-primary)">{{ app.job.title }}</div>
-              <div style="font-size:11.5px;color:var(--txt-muted)"><i class="fa-solid fa-location-dot"></i> {{ app.job.location or '—' }}</div>
-            </td>
-            <td>
-              <div style="display:flex;align-items:center;gap:var(--sp-3)">
-                <div class="company-avatar" style="width:32px;height:32px;font-size:12px;border-radius:var(--r-sm)">{{ app.job.company[0].upper() }}</div>
-                <span style="font-size:13px;color:var(--txt-secondary)">{{ app.job.company }}</span>
-              </div>
-            </td>
-            <td>
-              {% if app.job.category %}<span class="cat-badge" style="font-size:10.5px;padding:3px 9px">{{ app.job.category }}</span>
-              {% else %}<span style="color:var(--txt-muted)">—</span>{% endif %}
-            </td>
-            <td>
-              {% if app.ats_match_score > 0 %}
-              <div style="display:flex;align-items:center;gap:var(--sp-2)">
-                <div class="progress-track" style="width:56px">
-                  <div class="progress-fill" data-pct="{{ app.ats_match_score|round|int }}" style="width:0"></div>
-                </div>
-                <span style="font-size:12.5px;font-weight:700;color:{% if app.ats_match_score >= 75 %}var(--clr-success){% elif app.ats_match_score >= 50 %}var(--clr-primary){% else %}var(--clr-warning){% endif %}">{{ app.ats_match_score|round|int }}%</span>
-              </div>
-              {% else %}<span style="color:var(--txt-muted)">—</span>{% endif %}
-            </td>
-            <td><span class="status-pill sp-{{ app.status|lower }}">{{ app.status }}</span></td>
-            <td style="font-size:12.5px;color:var(--txt-muted)">{{ app.applied_at.strftime('%b %d, %Y') }}</td>
-            <td style="font-size:12.5px;color:var(--txt-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ app.employer_notes or '—' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<section class="panel">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Application history</p>
+            <h1>My Applications</h1>
+        </div>
     </div>
-  </div>
-  <div class="card-footer">
-    <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap">
-      <span style="font-size:11.5px;color:var(--txt-muted);font-weight:600">STATUS KEY:</span>
-      {% for s, cls in [('Applied','sp-applied'),('Reviewed','sp-reviewed'),('Selected','sp-selected'),('Rejected','sp-rejected'),('Hired','sp-hired')] %}
-        <span class="status-pill {{ cls }}" style="font-size:11px">{{ s }}</span>
-      {% endfor %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Job</th>
+                    <th>Resume Path</th>
+                    <th>Score</th>
+                    <th>Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                    <tr>
+                        <td>{{ application.job.title }}</td>
+                        <td>{{ application.resume_path }}</td>
+                        <td>{{ application.score }}%</td>
+                        <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">No applications submitted yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-  </div>
-</div>
-{% else %}
-<div class="card anim-fade-up">
-  <div class="empty-state">
-    <div class="empty-state-icon"><i class="fa-solid fa-paper-plane"></i></div>
-    <h3>No applications yet</h3>
-    <p>Browse open jobs and start applying to track your progress here.</p>
-    <a href="{{ url_for('user.job_listings') }}" class="btn btn-primary"><i class="fa-solid fa-briefcase"></i> Browse Jobs</a>
-  </div>
-</div>
-{% endif %}
+</section>
 {% endblock %}

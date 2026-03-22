@@ -1,162 +1,26 @@
+<!-- Individual job detail page. -->
 {% extends "base.html" %}
-{% block title %}{{ job.title }} — IRIS{% endblock %}
-{% block page_title %}Job Detail{% endblock %}
-
+{% set title = "Job Detail | IRIS Job Portal" %}
 {% block content %}
-<div class="anim-fade-up">
-  <div class="card" style="margin-bottom:var(--sp-5)">
-    <div class="card-body" style="padding:var(--sp-8)">
-      <div style="display:flex;align-items:flex-start;gap:var(--sp-6);flex-wrap:wrap">
-        <div class="company-avatar" style="width:72px;height:72px;font-size:26px;border-radius:var(--r-xl)">{{ job.company[0].upper() }}</div>
-        <div style="flex:1;min-width:200px">
-          <h1 style="margin-bottom:var(--sp-2)">{{ job.title }}</h1>
-          <div style="font-size:14px;color:var(--txt-muted);margin-bottom:var(--sp-4)">
-            <strong style="color:var(--txt-secondary)">{{ job.company }}</strong>
-            {% if job.location %} &nbsp;·&nbsp; <i class="fa-solid fa-location-dot"></i> {{ job.location }}{% endif %}
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
-            <span class="badge badge-info"><i class="fa-solid fa-briefcase"></i> {{ job.job_type }}</span>
-            <span class="badge badge-muted"><i class="fa-solid fa-layer-group"></i> {{ job.experience_level }}</span>
-            {% if job.category %}<span class="cat-badge"><i class="fa-solid fa-tag"></i> {{ job.category }}</span>{% endif %}
-            {% if job.deadline %}<span class="badge badge-warning"><i class="fa-solid fa-calendar"></i> Deadline {{ job.deadline.strftime('%b %d, %Y') }}</span>{% endif %}
-          </div>
+<section class="panel detail-panel">
+    <p class="eyebrow">Job detail</p>
+    <h1>{{ job.title }}</h1>
+    <p class="lead">{{ job.description }}</p>
+    {% if latest_resume %}
+        <div class="chip-row">
+            <span class="chip">Latest Resume: {{ latest_resume.original_name }}</span>
+            <span class="chip">Resume Score: {{ latest_resume.score }}%</span>
         </div>
-        {% if job.salary_min or job.salary_max %}
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--clr-success)">
-            {% if job.salary_min %}₹{{ "{:,}".format(job.salary_min) }}{% endif %}{% if job.salary_max %} – ₹{{ "{:,}".format(job.salary_max) }}{% endif %}
-          </div>
-          <div style="font-size:12px;color:var(--txt-muted)">per annum</div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 360px;gap:var(--sp-5);align-items:start">
-    <div style="display:flex;flex-direction:column;gap:var(--sp-5)">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-header-title"><div class="card-icon card-icon-primary"><i class="fa-solid fa-align-left"></i></div><h3>Job Description</h3></div>
-        </div>
-        <div class="card-body" style="font-size:13.5px;line-height:1.85;color:var(--txt-secondary);white-space:pre-line">{{ job.description }}</div>
-      </div>
-
-      {% if job.requirements %}
-      <div class="card">
-        <div class="card-header">
-          <div class="card-header-title"><div class="card-icon card-icon-info"><i class="fa-solid fa-list-check"></i></div><h3>Requirements</h3></div>
-        </div>
-        <div class="card-body" style="font-size:13.5px;line-height:1.85;color:var(--txt-secondary);white-space:pre-line">{{ job.requirements }}</div>
-      </div>
-      {% endif %}
-
-      {% if job.skills_required %}
-      <div class="card">
-        <div class="card-header">
-          <div class="card-header-title"><div class="card-icon card-icon-purple"><i class="fa-solid fa-code"></i></div><h3>Required Skills</h3></div>
-        </div>
-        <div class="card-body">
-          <div class="chip-group">
-            {% for skill in job.skills_required.split(',') %}
-              <span class="chip chip-primary">{{ skill.strip() }}</span>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      {% if skill_gap %}
-      <div class="card">
-        <div class="card-header">
-          <div class="card-header-title"><div class="card-icon card-icon-success"><i class="fa-solid fa-chart-pie"></i></div><h3>Your Skill Match</h3></div>
-          <span style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:{% if skill_gap.ats_score >= 75 %}var(--clr-success){% elif skill_gap.ats_score >= 50 %}var(--clr-primary){% else %}var(--clr-warning){% endif %}">{{ skill_gap.ats_score|round|int }}%</span>
-        </div>
-        <div class="card-body">
-          <div class="progress-track" style="margin-bottom:var(--sp-5);height:10px">
-            <div class="progress-fill" data-pct="{{ skill_gap.ats_score|round|int }}" style="width:0;height:10px"></div>
-          </div>
-          {% if skill_gap.matched_skills %}
-          <div style="margin-bottom:var(--sp-4)">
-            <div style="font-size:11.5px;font-weight:700;color:var(--clr-success);margin-bottom:var(--sp-2);letter-spacing:0.5px">YOU HAVE</div>
-            <div class="chip-group">{% for s in skill_gap.matched_skills[:8] %}<span class="chip chip-success">{{ s }}</span>{% endfor %}</div>
-          </div>
-          {% endif %}
-          {% if skill_gap.missing_skills %}
-          <div>
-            <div style="font-size:11.5px;font-weight:700;color:var(--clr-danger);margin-bottom:var(--sp-2);letter-spacing:0.5px">YOU'RE MISSING</div>
-            <div class="chip-group">{% for s in skill_gap.missing_skills[:6] %}<span class="chip chip-danger">{{ s }}</span>{% endfor %}</div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Apply Sidebar -->
-    <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
-      <div class="card">
-        <div class="card-header"><div class="card-header-title"><div class="card-icon card-icon-primary"><i class="fa-solid fa-paper-plane"></i></div><h3>Apply for this Job</h3></div></div>
-        <div class="card-body">
-          {% if already_applied %}
-            <div class="alert alert-success" style="margin-bottom:var(--sp-4)">
-              <span class="alert-icon"><i class="fa-solid fa-circle-check"></i></span>
-              <span class="alert-body">You've already applied!</span>
-            </div>
-            <a href="{{ url_for('user.my_applications') }}" class="btn btn-secondary btn-block"><i class="fa-solid fa-list"></i> View My Applications</a>
-          {% elif resumes %}
-            <form method="POST" action="{{ url_for('user.apply_job', job_id=job.id) }}" data-loading>
-              <div class="form-group">
-                <label class="form-label">Select Resume <span class="req">*</span></label>
-                <select name="resume_id" class="form-control" required>
-                  {% for r in resumes %}
-                    <option value="{{ r.id }}" {% if r.is_primary %}selected{% endif %}>{{ r.original_name or r.filename }} ({{ r.ats_score|round|int }}%)</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Cover Letter</label>
-                <textarea name="cover_letter" class="form-control" rows="5" placeholder="Briefly introduce yourself and explain why you're a great fit for this role…"></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary btn-lg btn-block">
-                <i class="fa-solid fa-paper-plane"></i> Submit Application
-              </button>
+    {% endif %}
+    <div class="action-row">
+        {% if has_applied %}
+            <span class="chip success">Application submitted</span>
+        {% else %}
+            <form method="post" action="{{ url_for('user.apply_job', job_id=job.id) }}">
+                <button type="submit" class="button">Apply Now</button>
             </form>
-          {% else %}
-            <div class="alert alert-warning" style="margin-bottom:var(--sp-4)">
-              <span class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-              <span class="alert-body">Upload a resume first to apply.</span>
-            </div>
-            <a href="{{ url_for('user.upload_resume') }}" class="btn btn-primary btn-block"><i class="fa-solid fa-upload"></i> Upload Resume</a>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-body">
-          <h4 style="color:var(--txt-secondary);margin-bottom:var(--sp-4);font-size:12px;letter-spacing:1px;text-transform:uppercase">Job Info</h4>
-          {% for label, val in [
-            ('Posted', job.created_at.strftime('%b %d, %Y')),
-            ('Applicants', job.applications.count()),
-          ] %}
-          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
-            <span style="color:var(--txt-muted)">{{ label }}</span>
-            <span style="font-weight:600;color:var(--txt-primary)">{{ val }}</span>
-          </div>
-          {% endfor %}
-          {% if job.deadline %}
-          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
-            <span style="color:var(--txt-muted)">Deadline</span>
-            <span style="font-weight:600;color:var(--clr-warning)">{{ job.deadline.strftime('%b %d, %Y') }}</span>
-          </div>
-          {% endif %}
-          <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:13px">
-            <span style="color:var(--txt-muted)">Status</span>
-            <span class="status-pill {% if job.is_active %}sp-active{% else %}sp-inactive{% endif %}">{{ 'Active' if job.is_active else 'Closed' }}</span>
-          </div>
-        </div>
-      </div>
+        {% endif %}
+        <a class="button secondary" href="{{ url_for('user.job_listings') }}">Back to Jobs</a>
     </div>
-  </div>
-</div>
+</section>
 {% endblock %}

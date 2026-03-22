@@ -1,87 +1,41 @@
+<!-- Employer applicants list page. -->
 {% extends "base.html" %}
-{% block title %}Applications — {{ job.title }}{% endblock %}
-{% block page_title %}Applications{% endblock %}
-
+{% set title = "Applicants | IRIS Job Portal" %}
 {% block content %}
-<div class="page-header anim-fade-up">
-  <div class="page-header-row">
-    <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap">
-      <a href="{{ url_for('employer.dashboard') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i></a>
-      <div>
-        <h1>{{ job.title }}</h1>
-        <p>{{ job.company }} · {{ applications|length }} applicant{{ 's' if applications|length != 1 }}</p>
-      </div>
-      {% if job.category %}<span class="cat-badge"><i class="fa-solid fa-tag"></i> {{ job.category }}</span>{% endif %}
-    </div>
-  </div>
-</div>
-
-{% if applications %}
-<div style="display:flex;flex-direction:column;gap:var(--sp-4)" class="anim-fade-up d1">
-  {% for app in applications %}
-  <div class="card">
-    <div class="card-body">
-      <div style="display:flex;align-items:flex-start;gap:var(--sp-5);flex-wrap:wrap">
-        <div class="company-avatar" style="width:52px;height:52px;font-size:20px;border-radius:50%;flex-shrink:0">{{ app.applicant.full_name[0].upper() }}</div>
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:15px;font-weight:700;color:var(--txt-primary)">{{ app.applicant.full_name }}</div>
-          <div style="font-size:12.5px;color:var(--txt-muted)">{{ app.applicant.email }}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2)">
-            {% if app.applicant.category %}<span class="cat-badge" style="font-size:10.5px;padding:3px 9px">{{ app.applicant.category }}</span>{% endif %}
-            <span style="font-size:12px;color:var(--txt-muted)"><i class="fa-regular fa-clock"></i> {{ app.applied_at.strftime('%b %d, %Y') }}</span>
-          </div>
+<section class="panel">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Applicant review</p>
+            <h1>{{ job.title }}</h1>
         </div>
-
-        {% if app.ats_match_score > 0 %}
-        <div style="text-align:center;flex-shrink:0">
-          <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:{% if app.ats_match_score >= 75 %}var(--clr-success){% elif app.ats_match_score >= 50 %}var(--clr-primary){% else %}var(--clr-warning){% endif %}">{{ app.ats_match_score|round|int }}%</div>
-          <div style="font-size:11px;color:var(--txt-muted)">ATS Match</div>
-          <div class="progress-track" style="width:70px;margin-top:4px">
-            <div class="progress-fill" data-pct="{{ app.ats_match_score|round|int }}" style="width:0"></div>
-          </div>
-        </div>
-        {% endif %}
-
-        <span class="status-pill sp-{{ app.status|lower }}" style="flex-shrink:0">{{ app.status }}</span>
-      </div>
-
-      {% if app.cover_letter %}
-      <div style="margin-top:var(--sp-4);padding:var(--sp-4);background:var(--bg-glass);border-radius:var(--r-xl);border-left:3px solid var(--clr-primary)">
-        <div style="font-size:10.5px;font-weight:700;color:var(--txt-muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:var(--sp-2)">COVER LETTER</div>
-        <p style="font-size:13px;color:var(--txt-secondary);line-height:1.7;margin:0">{{ app.cover_letter[:400] }}{{ '…' if app.cover_letter|length > 400 }}</p>
-      </div>
-      {% endif %}
-
-      <div style="margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--border-subtle)">
-        <form method="POST" action="{{ url_for('employer.update_status', app_id=app.id) }}" style="display:flex;gap:var(--sp-3);align-items:flex-end;flex-wrap:wrap">
-          <div style="min-width:140px">
-            <label class="form-label" style="font-size:11.5px">Update Status</label>
-            <select name="status" class="form-control" style="padding:8px 32px 8px 12px;font-size:13px">
-              {% for s in valid_statuses %}
-                <option value="{{ s }}" {% if app.status == s %}selected{% endif %}>{{ s }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div style="flex:1;min-width:200px">
-            <label class="form-label" style="font-size:11.5px">Notes</label>
-            <input type="text" name="notes" class="form-control" style="padding:9px 14px;font-size:13px" value="{{ app.employer_notes or '' }}" placeholder="Internal notes…"/>
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm">
-            <i class="fa-solid fa-save"></i> Update
-          </button>
-        </form>
-      </div>
     </div>
-  </div>
-  {% endfor %}
-</div>
-{% else %}
-<div class="card anim-fade-up">
-  <div class="empty-state">
-    <div class="empty-state-icon"><i class="fa-solid fa-inbox"></i></div>
-    <h3>No applications yet</h3>
-    <p>Share your job posting link to start receiving applications.</p>
-  </div>
-</div>
-{% endif %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Resume Path</th>
+                    <th>Score</th>
+                    <th>Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                    <tr>
+                        <td>{{ application.user.username }}</td>
+                        <td>{{ application.user.email }}</td>
+                        <td>{{ application.resume_path }}</td>
+                        <td>{{ application.score }}%</td>
+                        <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">No applicants yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
