@@ -25,7 +25,7 @@ SKILL_TAXONOMY = {
     ],
     "data": [
         "sql", "mysql", "postgresql", "mongodb", "redis", "elasticsearch",
-        "sqlite", "oracle", "cassandra", "dynamodb", "firebase",
+        "oracle", "cassandra", "dynamodb", "firebase",
         "pandas", "numpy", "scipy", "matplotlib", "seaborn", "plotly",
         "tableau", "power bi", "excel", "data analysis", "data visualization",
     ],
@@ -229,6 +229,10 @@ def analyze_resume(resume_text: str, job_description: str = "") -> dict:
 
 def compute_job_match(resume_text: str, job: object) -> float:
     """Quick match score between a resume and a Job model instance."""
-    jd_text = f"{job.title} {job.description or ''} {job.skills_required or ''} {job.requirements or ''}"
+    jd_text = (
+        f"{job.title} {job.description or ''} "
+        f"{getattr(job, 'skills_required', '') or ''} "
+        f"{getattr(job, 'requirements', '') or ''}"
+    )
     result = analyze_resume(resume_text, jd_text)
     return result["ats_score"]

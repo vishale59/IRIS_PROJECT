@@ -1,55 +1,221 @@
-<!-- Base layout for the IRIS Job Portal UI. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title or app_name }}</title>
+    <title>{{ title or app_name or "IRIS Job Portal" }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkR4j8RykGGB5BPdZi6tm9e2LwA8pDgN9GpQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <div class="page-shell">
-        <header class="site-header">
-            <a class="brand" href="{{ url_for('index') }}">IRIS Job Portal</a>
-            <nav class="main-nav">
-                {% if session.get('user_role') == 'user' %}
-                    <a href="{{ url_for('user.dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('user.job_listings') }}">Jobs</a>
-                    <a href="{{ url_for('user.upload_resume') }}">Resume</a>
-                    <a href="{{ url_for('user.my_applications') }}">Applications</a>
-                {% elif session.get('user_role') == 'employer' %}
-                    <a href="{{ url_for('employer.dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('employer.post_job') }}">Post Job</a>
-                {% elif session.get('user_role') == 'admin' %}
-                    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('admin.users') }}">Users</a>
-                    <a href="{{ url_for('admin.jobs') }}">Jobs</a>
-                {% endif %}
-                {% if session.get('user_id') %}
-                    <a href="{{ url_for('auth.logout') }}">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('auth.login') }}">Login</a>
-                {% endif %}
-            </nav>
-        </header>
+<body class="{% if session.get('user_id') %}app-layout{% else %}public-layout{% endif %} {% block body_class %}{% endblock %}">
+    {% set role = session.get('user_role') %}
+    {% set endpoint = request.endpoint or '' %}
+    {% set username = session.get('username', 'Guest') %}
+    {% set user_initial = (username[:1] or 'G')|upper %}
+    {% set page_content %}{% block content %}{% endblock %}{% endset %}
 
-        <main class="content-wrap">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <section class="flash-stack">
-                        {% for category, message in messages %}
-                            <div class="flash flash-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    </section>
-                {% endif %}
-            {% endwith %}
+    {% if session.get('user_id') %}
+        <div class="app-shell">
+            <aside class="sidebar" data-sidebar>
+                <div class="sidebar__header">
+                    <a class="brand" href="{{ url_for('index') }}">
+                        <span class="brand-mark"><i class="fa-solid fa-sparkles"></i></span>
+                        <span>
+                            <strong>IRIS Portal</strong>
+                            <small>Premium hiring workspace</small>
+                        </span>
+                    </a>
+                    <button class="sidebar__close" type="button" aria-label="Close sidebar" data-sidebar-close>
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
-            {% block content %}{% endblock %}
-        </main>
-    </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+                <div class="sidebar__profile">
+                    <span class="sidebar__avatar">{{ user_initial }}</span>
+                    <div>
+                        <strong>{{ username }}</strong>
+                        <small>{{ role|title }} panel</small>
+                    </div>
+                </div>
+
+                <nav class="sidebar__nav">
+                    {% if role == 'admin' %}
+                        <a class="sidebar__link {% if endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fa-solid fa-chart-line"></i><span>Dashboard</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'admin.jobs' %}is-active{% endif %}" href="{{ url_for('admin.jobs') }}">
+                            <i class="fa-solid fa-briefcase"></i><span>Jobs</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'admin.applications' %}is-active{% endif %}" href="{{ url_for('admin.applications') }}">
+                            <i class="fa-solid fa-file-circle-check"></i><span>Applications</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i><span>Resume Analysis</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'admin.users' %}is-active{% endif %}" href="{{ url_for('admin.users') }}">
+                            <i class="fa-solid fa-id-badge"></i><span>Profile</span>
+                        </a>
+                    {% elif role == 'employer' %}
+                        <a class="sidebar__link {% if endpoint == 'employer.dashboard' %}is-active{% endif %}" href="{{ url_for('employer.dashboard') }}">
+                            <i class="fa-solid fa-chart-line"></i><span>Dashboard</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint in ['employer.post_job', 'employer.edit_job'] %}is-active{% endif %}" href="{{ url_for('employer.post_job') }}">
+                            <i class="fa-solid fa-briefcase"></i><span>Jobs</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'employer.applicants' %}is-active{% endif %}" href="{{ url_for('employer.dashboard') }}">
+                            <i class="fa-solid fa-file-circle-check"></i><span>Applications</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint in ['employer.dashboard', 'employer.applicants'] %}is-active{% endif %}" href="{{ url_for('employer.dashboard') }}">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i><span>Resume Analysis</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'employer.dashboard' %}is-active{% endif %}" href="{{ url_for('employer.dashboard') }}">
+                            <i class="fa-solid fa-user"></i><span>Profile</span>
+                        </a>
+                    {% elif role == 'user' %}
+                        <a class="sidebar__link {% if endpoint == 'user.dashboard' %}is-active{% endif %}" href="{{ url_for('user.dashboard') }}">
+                            <i class="fa-solid fa-chart-line"></i><span>Dashboard</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint in ['user.job_listings', 'user.job_detail'] %}is-active{% endif %}" href="{{ url_for('user.job_listings') }}">
+                            <i class="fa-solid fa-briefcase"></i><span>Jobs</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint == 'user.my_applications' %}is-active{% endif %}" href="{{ url_for('user.my_applications') }}">
+                            <i class="fa-solid fa-file-circle-check"></i><span>Applications</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint in ['user.upload_resume', 'user.resume_result'] %}is-active{% endif %}" href="{{ url_for('user.upload_resume') }}">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i><span>Resume Analysis</span>
+                        </a>
+                        <a class="sidebar__link {% if endpoint in ['user.profile', 'user.upload_resume', 'user.resume_result'] %}is-active{% endif %}" href="{{ url_for('user.profile') }}">
+                            <i class="fa-solid fa-user"></i><span>Profile</span>
+                        </a>
+                    {% endif %}
+
+                    <a class="sidebar__link sidebar__link--logout" href="{{ url_for('auth.logout') }}">
+                        <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar__footer">
+                    <div class="sidebar__footer-card">
+                        <span class="eyebrow">Workflow</span>
+                        <h3>Stay hiring-ready</h3>
+                        <p>Track portal activity, manage jobs, and keep every action organized from one polished workspace.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="app-shell__main">
+                <header class="topbar">
+                    <div class="topbar__left">
+                        <button class="topbar__toggle" type="button" aria-label="Open sidebar" aria-expanded="false" data-sidebar-toggle>
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <div>
+                            <p class="topbar__eyebrow">Welcome back, {{ username }}</p>
+                            <h1 class="topbar__title">{{ title or "Dashboard" }}</h1>
+                        </div>
+                    </div>
+
+                    <div class="topbar__right">
+                        <button class="topbar__icon" type="button" aria-label="Notifications">
+                            <i class="fa-regular fa-bell"></i>
+                        </button>
+                        <div class="topbar__profile">
+                            <span class="topbar__avatar">{{ user_initial }}</span>
+                            <div>
+                                <strong>{{ username }}</strong>
+                                <small>{{ role|title }}</small>
+                            </div>
+                        </div>
+                        <a class="btn btn-secondary btn-sm" href="{{ url_for('auth.logout') }}">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            Logout
+                        </a>
+                    </div>
+                </header>
+
+                <main class="main-content">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="flash-stack">
+                                {% for category, message in messages %}
+                                    <div class="flash flash-{{ category if category in ['success', 'error', 'info', 'warning'] else 'info' }}" data-animate>
+                                        <span class="flash__icon">
+                                            {% if category == 'success' %}
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            {% elif category == 'error' %}
+                                                <i class="fa-solid fa-circle-exclamation"></i>
+                                            {% elif category == 'warning' %}
+                                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                            {% else %}
+                                                <i class="fa-solid fa-circle-info"></i>
+                                            {% endif %}
+                                        </span>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    {{ page_content }}
+                </main>
+            </div>
+        </div>
+
+        <div class="app-overlay" data-sidebar-overlay></div>
+    {% else %}
+        <div class="public-shell">
+            <div class="public-shell__gradient public-shell__gradient--one"></div>
+            <div class="public-shell__gradient public-shell__gradient--two"></div>
+
+            <header class="public-header">
+                <a class="brand" href="{{ url_for('index') }}">
+                    <span class="brand-mark"><i class="fa-solid fa-sparkles"></i></span>
+                    <span>
+                        <strong>IRIS Portal</strong>
+                        <small>Modern job intelligence</small>
+                    </span>
+                </a>
+                <div class="public-header__actions">
+                    <a class="btn btn-secondary btn-sm" href="{{ url_for('auth.login') }}">Login</a>
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Register</a>
+                </div>
+            </header>
+
+            <main class="public-main">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-stack">
+                            {% for category, message in messages %}
+                                <div class="flash flash-{{ category if category in ['success', 'error', 'info', 'warning'] else 'info' }}">
+                                    <span class="flash__icon">
+                                        {% if category == 'success' %}
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        {% elif category == 'error' %}
+                                            <i class="fa-solid fa-circle-exclamation"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        {% endif %}
+                                    </span>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {{ page_content }}
+            </main>
+        </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

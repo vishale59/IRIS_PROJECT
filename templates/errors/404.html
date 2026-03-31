@@ -1,10 +1,15 @@
-<!-- 404 error page. -->
 {% extends "base.html" %}
 {% set title = "Not Found | IRIS Job Portal" %}
 {% block content %}
-<section class="panel centered-panel">
-    <h1>404</h1>
-    <p>The page you requested could not be found.</p>
-    <a class="button" href="{{ url_for('index') }}">Return Home</a>
-</section>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-lg border-0 text-center">
+            <div class="card-body p-5">
+                <h1 class="display-3 fw-bold text-primary">404</h1>
+                <p class="lead text-secondary">The page you requested could not be found.</p>
+                <a class="btn btn-primary btn-lg rounded-pill" href="{{ url_for('index') }}">Return Home</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

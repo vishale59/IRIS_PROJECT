@@ -1,24 +1,36 @@
-<!-- Login page for the IRIS Job Portal. -->
 {% extends "base.html" %}
 {% set title = "Login | IRIS Job Portal" %}
 {% block content %}
-<section class="hero auth-hero">
-    <div class="hero-copy">
-        <p class="eyebrow">Smart hiring starts here</p>
-        <h1>Sign in to your IRIS workspace.</h1>
-        <p>Access your job dashboard, hiring panel, or admin console with one secure login.</p>
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-lg-10">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-6">
+                <div class="hero-card h-100">
+                    <span class="eyebrow">Welcome back</span>
+                    <h1 class="display-6 fw-bold mb-3">Sign in to continue your hiring journey.</h1>
+                    <p class="lead text-secondary mb-0">Track applications, upload resumes, and manage jobs from one polished workspace.</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card auth-card shadow-lg border-0">
+                    <div class="card-body p-4 p-lg-5">
+                        <h2 class="h3 mb-4">Login</h2>
+                        <form method="post" class="vstack gap-3">
+                            <div>
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control form-control-lg" placeholder="name@example.com" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control form-control-lg" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill">Login</button>
+                        </form>
+                        <p class="text-secondary mt-4 mb-0">New here? <a href="{{ url_for('auth.register') }}" class="fw-semibold text-decoration-none">Create an account</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="panel form-panel">
-        <form method="post" class="form-grid">
-            <label>Email
-                <input type="email" name="email" placeholder="name@example.com" required>
-            </label>
-            <label>Password
-                <input type="password" name="password" placeholder="Enter your password" required>
-            </label>
-            <button type="submit" class="button">Login</button>
-        </form>
-        <p class="muted">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
-    </div>
-</section>
+</div>
 {% endblock %}

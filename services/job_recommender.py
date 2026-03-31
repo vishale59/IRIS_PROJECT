@@ -22,7 +22,7 @@ JOB_ROLE_SKILL_MAP = {
         "icon": "fa-chart-column",
     },
     "Database Administrator": {
-        "skills": {"sql", "mysql", "postgresql", "oracle", "mongodb", "redis", "sqlite"},
+        "skills": {"sql", "mysql", "postgresql", "oracle", "mongodb", "redis"},
         "icon": "fa-database",
     },
     "Frontend Developer": {
@@ -69,12 +69,13 @@ def recommend_jobs(resume_text: str, jobs: list, top_n: int = 6) -> list[dict]:
     scored = []
 
     for job in jobs:
-        if not job.is_active:
+        if not getattr(job, "is_active", True):
             continue
 
         jd_text = (
             f"{job.title} {job.description or ''} "
-            f"{job.skills_required or ''} {job.requirements or ''}"
+            f"{getattr(job, 'skills_required', '') or ''} "
+            f"{getattr(job, 'requirements', '') or ''}"
         )
         result = analyze_resume(resume_text, jd_text)
         scored.append({
@@ -92,7 +93,8 @@ def get_skill_gap(resume_text: str, job) -> dict:
     """Detailed skill gap analysis for a specific job."""
     jd_text = (
         f"{job.title} {job.description or ''} "
-        f"{job.skills_required or ''} {job.requirements or ''}"
+        f"{getattr(job, 'skills_required', '') or ''} "
+        f"{getattr(job, 'requirements', '') or ''}"
     )
     return analyze_resume(resume_text, jd_text)
 

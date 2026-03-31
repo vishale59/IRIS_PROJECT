@@ -1,27 +1,167 @@
-<!-- Admin dashboard page. -->
 {% extends "base.html" %}
-{% set title = "Admin Dashboard | IRIS Job Portal" %}
+{% set title = "Admin Dashboard" %}
+
 {% block content %}
-<section class="panel">
-    <p class="eyebrow">Platform overview</p>
-    <h1>Admin Dashboard</h1>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>Users</span>
-            <strong>{{ user_count }}</strong>
+<section class="dashboard-overview">
+    <div class="dashboard-heading" data-animate>
+        <div>
+            <span class="eyebrow">Operations overview</span>
+            <h2>Run the IRIS portal from one polished admin command center.</h2>
+            <p>Monitor growth, review recent platform events, and keep hiring activity visible across users, jobs, resumes, and applications.</p>
         </div>
-        <div class="stat-card">
-            <span>Jobs</span>
-            <strong>{{ job_count }}</strong>
-        </div>
-        <div class="stat-card">
-            <span>Applications</span>
-            <strong>{{ application_count }}</strong>
-        </div>
-        <div class="stat-card">
-            <span>Resumes</span>
-            <strong>{{ resume_count }}</strong>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('admin.users') }}">
+                <i class="fa-solid fa-users"></i>
+                Manage Users
+            </a>
+            <a class="btn btn-primary" href="{{ url_for('admin.jobs') }}">
+                <i class="fa-solid fa-briefcase"></i>
+                Review Jobs
+            </a>
         </div>
     </div>
+
+    <div class="stats-grid" data-animate>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-user-group"></i></div>
+            <span>Total Users</span>
+            <strong>{{ user_count }}</strong>
+            <small>Registered accounts across the platform</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-briefcase"></i></div>
+            <span>Total Jobs</span>
+            <strong>{{ job_count }}</strong>
+            <small>Open and historical job postings tracked</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-file-circle-check"></i></div>
+            <span>Applications</span>
+            <strong>{{ application_count }}</strong>
+            <small>Candidate submissions processed so far</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+            <span>Resume Uploads</span>
+            <strong>{{ resume_count }}</strong>
+            <small>Analyzed resumes inside the IRIS workspace</small>
+        </article>
+    </div>
+
+    <div class="content-grid">
+        <article class="chart-card" data-animate>
+            <div class="panel-head mb-3">
+                <div>
+                    <span class="eyebrow">Growth analytics</span>
+                    <h3 class="h3">Platform activity trend</h3>
+                </div>
+                <span class="metric-badge">Live data from your database</span>
+            </div>
+            <p class="text-secondary mb-3">Monthly movement across user signups, published jobs, and submitted applications.</p>
+            <div class="chart-card__canvas">
+                <canvas id="adminGrowthChart"></canvas>
+            </div>
+            <script id="chart-labels" type="application/json">{{ chart_labels|tojson }}</script>
+            <script id="chart-users" type="application/json">{{ chart_users|tojson }}</script>
+            <script id="chart-jobs" type="application/json">{{ chart_jobs|tojson }}</script>
+            <script id="chart-applications" type="application/json">{{ chart_applications|tojson }}</script>
+        </article>
+
+        <aside class="dashboard-sidebar">
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">Recent activity</span>
+                        <h3 class="h3">What just happened</h3>
+                    </div>
+                </div>
+
+                <div class="activity-list">
+                    {% for item in recent_activity %}
+                        <div class="activity-row">
+                            <div class="activity-row__icon"><i class="fa-solid {{ item.icon }}"></i></div>
+                            <div class="activity-row__content">
+                                <strong>{{ item.title }}</strong>
+                                <p>{{ item.meta }}</p>
+                            </div>
+                            <span class="muted-copy">{{ item.timestamp.strftime('%d %b') }}</span>
+                        </div>
+                    {% else %}
+                        <div class="empty-inline">
+                            <h3>No recent activity yet</h3>
+                            <p>New portal actions will appear here as data starts flowing in.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">Top jobs</span>
+                        <h3 class="h3">Most active listings</h3>
+                    </div>
+                </div>
+
+                <div class="top-jobs">
+                    {% for job in top_jobs %}
+                        <div class="top-jobs__row">
+                            <div>
+                                <strong>{{ job.title }}</strong>
+                                <p class="text-secondary mb-0">Posted by {{ job.employer.username }}</p>
+                            </div>
+                            <span class="chip-pill">{{ job.applications|length }} applicants</span>
+                        </div>
+                    {% else %}
+                        <div class="empty-inline">
+                            <h3>No jobs yet</h3>
+                            <p>Once employers start posting roles, the top listings will appear here.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </aside>
+    </div>
+
+    <article class="table-card" data-animate>
+        <div class="panel-head mb-3">
+            <div>
+                <span class="eyebrow">Newest users</span>
+                <h3 class="h3">Latest account activity</h3>
+            </div>
+            <a class="text-link" href="{{ url_for('admin.users') }}">Open full user list</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="chip-pill">{{ user.role|title }}</span></td>
+                            <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-secondary">No users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

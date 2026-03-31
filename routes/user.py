@@ -1,4 +1,4 @@
-"""User-facing job browsing, resume upload, and job application routes."""
+"""User-facing job browsing, profile, resume upload, and application routes."""
 
 import os
 import uuid
@@ -6,7 +6,7 @@ import uuid
 from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 
-from models import Application, Job, ResumeData, db
+from models import Application, Job, ResumeData, User, db
 from routes.auth import login_required, roles_required
 from services.resume_parser import analyze_resume_keywords, extract_text_from_file
 
@@ -26,11 +26,13 @@ def dashboard():
         .all()
     )
     jobs = Job.query.order_by(Job.created_at.desc()).all()
+    featured_jobs = [_serialize_job_card(job) for job in jobs[:5]]
     return render_template(
         "user/dashboard.html",
         resumes=resumes,
         applications=applications,
         jobs=jobs[:5],
+        featured_jobs=featured_jobs,
     )
 
 
@@ -44,7 +46,37 @@ def job_listings():
         application.job_id
         for application in Application.query.filter_by(user_id=session["user_id"]).all()
     }
-    return render_template("user/job_listings.html", jobs=jobs, applied_job_ids=applied_job_ids)
+    job_cards = [_serialize_job_card(job) for job in jobs]
+    return render_template(
+        "user/job_listings.html",
+        jobs=jobs,
+        job_cards=job_cards,
+        applied_job_ids=applied_job_ids,
+    )
+
+
+@user_bp.route("/profile")
+@login_required
+@roles_required("user")
+def profile():
+    """Show the current user's profile using fields supported by the active model."""
+    user = User.query.get_or_404(session["user_id"])
+    resumes = (
+        ResumeData.query.filter_by(user_id=user.id)
+        .order_by(ResumeData.uploaded_at.desc())
+        .all()
+    )
+    applications = (
+        Application.query.filter_by(user_id=user.id)
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    return render_template(
+        "user/profile.html",
+        user=user,
+        resumes=resumes,
+        applications=applications,
+    )
 
 
 @user_bp.route("/resume/upload", methods=["GET", "POST"])
@@ -178,3 +210,43 @@ def my_applications():
 def _allowed_file(filename: str) -> bool:
     extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     return extension in current_app.config["ALLOWED_EXTENSIONS"]
+
+
+def _serialize_job_card(job: Job) -> dict:
+    """Prepare compact job card display metadata for templates."""
+    return {
+        "job": job,
+        "preview": _truncate_text(job.description, 170),
+        "skills": _extract_job_skills(job.description),
+    }
+
+
+def _extract_job_skills(description: str) -> list[str]:
+    """Infer a few visible skill tags from the raw job description."""
+    normalized = description.lower()
+    vocabulary = [
+        "Python",
+        "Flask",
+        "JavaScript",
+        "React",
+        "HTML",
+        "CSS",
+        "SQL",
+        "MySQL",
+        "Docker",
+        "Git",
+        "REST API",
+        "UX",
+        "Accessibility",
+        "Machine Learning",
+        "Data Analysis",
+    ]
+    matches = [skill for skill in vocabulary if skill.lower() in normalized]
+    return matches[:4] or ["Hiring", "Full Time", "Growth"]
+
+
+def _truncate_text(value: str, length: int) -> str:
+    """Return a short preview snippet without cutting too aggressively."""
+    if len(value) <= length:
+        return value
+    return f"{value[:length].rstrip()}..."

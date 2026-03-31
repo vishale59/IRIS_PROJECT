@@ -1,78 +1,219 @@
-<!-- User dashboard page. -->
 {% extends "base.html" %}
-{% set title = "User Dashboard | IRIS Job Portal" %}
+{% set title = "Dashboard" %}
+
 {% block content %}
-<section class="dashboard-grid">
-    <article class="panel hero-panel">
-        <p class="eyebrow">Candidate dashboard</p>
-        <h1>Welcome, {{ session.get('username') }}.</h1>
-        <p>Track resume insights, discover jobs, and keep your application flow moving.</p>
-        <div class="chip-row">
-            <span class="chip">Resumes {{ resumes|length }}</span>
-            <span class="chip">Applications {{ applications|length }}</span>
-            <span class="chip">Open Jobs {{ jobs|length }}</span>
+<section class="dashboard-hero section" data-animate>
+    <div class="dashboard-hero__content">
+        <span class="eyebrow">Candidate Command Center</span>
+        <h1>Build a sharper resume, discover stronger roles, and track every opportunity in one premium workspace.</h1>
+        <p>
+            Welcome back, {{ session.get('username') }}. Your hiring pipeline is organized around what matters most:
+            ATS performance, active applications, and the next best-fit roles.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="{{ url_for('user.upload_resume') }}">Upload Resume</a>
+            <a class="btn btn-secondary" href="{{ url_for('user.job_listings') }}">Explore Jobs</a>
         </div>
-    </article>
-    <article class="panel">
-        <h2>Latest Resume Analysis</h2>
-        {% if resumes %}
-            <p class="metric">{{ resumes[0].score }}%</p>
-            <p>{{ resumes[0].original_name }}</p>
-            <p class="muted">Keywords: {{ resumes[0].keywords or "No keywords extracted" }}</p>
-            <a class="text-link" href="{{ url_for('user.resume_result', resume_id=resumes[0].id) }}">View analysis</a>
-        {% else %}
-            <p class="muted">Upload a resume to generate an AI-powered skill score.</p>
-        {% endif %}
-    </article>
+    </div>
+
+    <aside class="hero-panel glass-card" data-animate>
+        <div class="hero-panel__head">
+            <span class="pill pill-live">Live overview</span>
+            <span class="muted-copy">Updated from your workspace</span>
+        </div>
+        <div class="hero-panel__grid">
+            <article class="stat-card stat-card-featured">
+                <span>Total resumes</span>
+                <strong>{{ resumes|length }}</strong>
+                <small>ATS-ready versions in your library</small>
+            </article>
+            <article class="stat-card">
+                <span>Applications</span>
+                <strong>{{ applications|length }}</strong>
+                <small>Tracked across active roles</small>
+            </article>
+            <article class="stat-card">
+                <span>Open roles</span>
+                <strong>{{ jobs|length }}</strong>
+                <small>Fresh opportunities to review</small>
+            </article>
+            <article class="stat-card">
+                <span>Application momentum</span>
+                <strong>{{ applications|length }}</strong>
+                <small>Track progress with a cleaner, portfolio-ready flow</small>
+            </article>
+        </div>
+    </aside>
 </section>
 
-<section class="grid-two">
-    <article class="panel">
-        <div class="section-head">
-            <h2>Recommended Jobs</h2>
-            <a class="text-link" href="{{ url_for('user.job_listings') }}">View all</a>
-        </div>
-        <div class="card-list">
-            {% for job in jobs %}
-                <div class="job-card">
-                    <h3>{{ job.title }}</h3>
-                    <p>{{ job.description[:160] }}{% if job.description|length > 160 %}...{% endif %}</p>
-                    <a class="button secondary" href="{{ url_for('user.job_detail', job_id=job.id) }}">Open Job</a>
+<section class="dashboard-grid section">
+    <div class="dashboard-main">
+        <article class="chart-card" data-animate>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Pipeline snapshot</span>
+                    <h2>Applications vs open jobs</h2>
+                </div>
+                <span class="metric-badge">Candidate overview</span>
+            </div>
+            <p class="text-secondary mb-3">A quick visual view of how your current activity compares to the opportunities available right now.</p>
+            <div class="chart-card__canvas">
+                <canvas id="candidateOverviewChart"></canvas>
+            </div>
+            <script id="candidate-chart-labels" type="application/json">{{ ['Applications', 'Open Jobs', 'Resumes']|tojson }}</script>
+            <script id="candidate-chart-values" type="application/json">{{ [applications|length, jobs|length, resumes|length]|tojson }}</script>
+        </article>
+
+        <article class="panel panel-feature" data-animate>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Resume Intelligence</span>
+                    <h2>Latest ATS analysis</h2>
+                </div>
+                <a class="btn btn-secondary btn-sm" href="{{ url_for('user.upload_resume') }}">Manage Resume</a>
+            </div>
+
+            {% if resumes %}
+                <div class="analysis-card">
+                    <div class="analysis-score">
+                        <div class="score-ring" data-score="{{ resumes[0].score or 0 }}">
+                            <strong>{{ resumes[0].score or 0 }}%</strong>
+                            <span>ATS Score</span>
+                        </div>
+                    </div>
+                    <div class="analysis-copy">
+                        <h3>{{ resumes[0].original_name }}</h3>
+                        <p>
+                            {% if resumes[0].keywords %}
+                                Your latest analysis surfaced these keywords: {{ resumes[0].keywords }}
+                            {% else %}
+                                Your resume has been analyzed. Revisit the detailed report to review extracted skills and optimization signals.
+                            {% endif %}
+                        </p>
+                        <div class="meta-row">
+                            <span class="meta-chip">Latest upload</span>
+                            <span class="meta-chip">Insights ready</span>
+                        </div>
+                        <div class="hero-actions">
+                            <a class="btn btn-primary" href="{{ url_for('user.resume_result', resume_id=resumes[0].id) }}">View Analysis</a>
+                            <a class="btn btn-secondary" href="{{ url_for('user.profile') }}">Update Profile</a>
+                        </div>
+                    </div>
                 </div>
             {% else %}
-                <p class="muted">No jobs available yet.</p>
-            {% endfor %}
-        </div>
-    </article>
-    <article class="panel">
-        <div class="section-head">
-            <h2>Recent Applications</h2>
-            <a class="text-link" href="{{ url_for('user.my_applications') }}">See history</a>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Job</th>
-                        <th>Match Score</th>
-                        <th>Applied</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for application in applications %}
-                        <tr>
-                            <td>{{ application.job.title }}</td>
-                            <td>{{ application.score }}%</td>
-                            <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="3">No applications submitted yet.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </article>
+                <div class="empty-state">
+                    <div class="empty-state__icon">+</div>
+                    <div>
+                        <h3>No resume uploaded yet</h3>
+                        <p>Start with a resume upload to unlock ATS scoring, keyword extraction, and better job matching.</p>
+                    </div>
+                    <a class="btn btn-primary" href="{{ url_for('user.upload_resume') }}">Upload Your Resume</a>
+                </div>
+            {% endif %}
+        </article>
+
+        <article class="panel" data-animate>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Recommended Roles</span>
+                    <h2>Best-fit opportunities</h2>
+                </div>
+                <a class="text-link" href="{{ url_for('user.job_listings') }}">See all jobs</a>
+            </div>
+
+            <div class="job-list">
+                {% for card in featured_jobs[:4] %}
+                    {% set job = card.job %}
+                    <article class="job-card">
+                        <div class="job-card__top">
+                            <div>
+                                <h3>{{ job.title }}</h3>
+                                <p>Hiring pipeline open now</p>
+                            </div>
+                            <span class="pill">{{ job.applications|length }} applicants</span>
+                        </div>
+                        <p class="job-card__description">{{ card.preview }}</p>
+                        <div class="meta-row">
+                            {% for skill in card.skills[:3] %}
+                                <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="job-card__footer">
+                            <span class="muted-copy">Curated for your dashboard</span>
+                            <a class="btn btn-primary btn-sm" href="{{ url_for('user.job_detail', job_id=job.id) }}">Open Role</a>
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="empty-inline">
+                        <h3>No live jobs yet</h3>
+                        <p>New openings will appear here as soon as they are published.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+
+    <aside class="dashboard-sidebar">
+        <article class="panel quick-actions" data-animate>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Quick Actions</span>
+                    <h2>Keep momentum</h2>
+                </div>
+            </div>
+            <a class="action-tile" href="{{ url_for('user.upload_resume') }}">
+                <div>
+                    <strong>Upload a new resume</strong>
+                    <p>Refresh ATS insights with an updated version.</p>
+                </div>
+                <span>01</span>
+            </a>
+            <a class="action-tile" href="{{ url_for('user.job_listings') }}">
+                <div>
+                    <strong>Browse job listings</strong>
+                    <p>Scan new roles and shortlist promising matches.</p>
+                </div>
+                <span>02</span>
+            </a>
+            <a class="action-tile" href="{{ url_for('user.my_applications') }}">
+                <div>
+                    <strong>Review applications</strong>
+                    <p>Track status and stay on top of follow-ups.</p>
+                </div>
+                <span>03</span>
+            </a>
+        </article>
+
+        <article class="panel" data-animate>
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">Application Activity</span>
+                    <h2>Recent submissions</h2>
+                </div>
+            </div>
+
+            <div class="activity-list">
+                {% for application in applications[:5] %}
+                    <div class="activity-row">
+                        <div class="activity-row__icon"></div>
+                        <div class="activity-row__content">
+                            <strong>{{ application.job.title }}</strong>
+                            <p>Applied on {{ application.applied_at.strftime('%d %b %Y') }}</p>
+                        </div>
+                        <span class="pill pill-score">{{ application.score }}%</span>
+                    </div>
+                {% else %}
+                    <div class="empty-inline">
+                        <h3>No applications yet</h3>
+                        <p>Once you apply to a role, your activity stream will appear here.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </aside>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

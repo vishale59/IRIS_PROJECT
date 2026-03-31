@@ -3,20 +3,26 @@
 import os
 
 from flask import Flask, g, redirect, render_template, session, url_for
+import pymysql
+from sqlalchemy.exc import OperationalError
 
-from config import config
+from config import config, mask_database_uri
 from models import Application, Job, ResumeData, User, db
 
 
 def create_app(config_name: str = "default") -> Flask:
     """Create and configure the Flask application."""
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="static", template_folder="templates")
     app.config.from_object(config[config_name])
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
+    ensure_database_exists()
 
     db.init_app(app)
+    app.logger.info(
+        "Active database URI: %s",
+        mask_database_uri(app.config["SQLALCHEMY_DATABASE_URI"]),
+    )
 
     from routes.admin import admin_bp
     from routes.auth import auth_bp
@@ -65,10 +71,64 @@ def create_app(config_name: str = "default") -> Flask:
         return render_template("errors/500.html"), 500
 
     with app.app_context():
-        db.create_all()
-        seed_data()
+        bootstrap_database()
 
     return app
+
+
+def ensure_database_exists() -> None:
+    """Create the configured MySQL database automatically if it does not exist."""
+    connection = pymysql.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", ""),
+        password=os.getenv("DB_PASSWORD", ""),
+        autocommit=True,
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"CREATE DATABASE IF NOT EXISTS `{os.getenv('DB_NAME', 'iris_db')}` "
+                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+            )
+    finally:
+        connection.close()
+
+
+def reset_database() -> None:
+    """Drop and recreate the configured MySQL database."""
+    database_name = os.getenv("DB_NAME", "iris_db")
+    connection = pymysql.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER", ""),
+        password=os.getenv("DB_PASSWORD", ""),
+        autocommit=True,
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP DATABASE IF EXISTS `{database_name}`")
+            cursor.execute(
+                f"CREATE DATABASE `{database_name}` "
+                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+            )
+    finally:
+        connection.close()
+
+
+def bootstrap_database() -> None:
+    """Initialize tables and recover automatically from stale schema mismatches."""
+    try:
+        db.create_all()
+        seed_data()
+    except OperationalError as exc:
+        from flask import current_app
+
+        current_app.logger.warning("Database bootstrap failed, resetting schema: %s", exc)
+        db.session.rollback()
+        reset_database()
+        db.create_all()
+        seed_data()
 
 
 def seed_data() -> None:

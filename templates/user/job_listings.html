@@ -1,33 +1,102 @@
-<!-- Job listings page for users. -->
 {% extends "base.html" %}
-{% set title = "Job Listings | IRIS Job Portal" %}
+{% set title = "Jobs" %}
+
 {% block content %}
-<section class="panel">
-    <div class="section-head">
+<section class="dashboard-overview">
+    <div class="dashboard-heading" data-animate>
         <div>
-            <p class="eyebrow">Explore opportunities</p>
-            <h1>Available Jobs</h1>
+            <span class="eyebrow">Curated opportunities</span>
+            <h2>Discover roles that match your resume strength and application goals.</h2>
+            <p>Browse polished job cards, scan core skills quickly, and jump into high-fit opportunities with a cleaner hiring workflow.</p>
         </div>
-        <a class="button secondary" href="{{ url_for('user.upload_resume') }}">Upload Resume</a>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('user.my_applications') }}">
+                <i class="fa-solid fa-file-circle-check"></i>
+                My Applications
+            </a>
+            <a class="btn btn-primary" href="{{ url_for('user.upload_resume') }}">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                Upload Resume
+            </a>
+        </div>
     </div>
-    <div class="card-list">
-        {% for job in jobs %}
-            <article class="job-card">
-                <div class="job-card-top">
-                    <h2>{{ job.title }}</h2>
-                    <span class="chip">{{ job.applications|length }} applicants</span>
+
+    <div class="stats-grid" data-animate>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-briefcase"></i></div>
+            <span>Open Roles</span>
+            <strong>{{ job_cards|length }}</strong>
+            <small>Fresh opportunities available in the portal</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-check-to-slot"></i></div>
+            <span>Applied Roles</span>
+            <strong>{{ applied_job_ids|length }}</strong>
+            <small>Applications already submitted from your account</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <span>Resume Ready</span>
+            <strong>{{ "Yes" if session.get('user_id') else "No" }}</strong>
+            <small>Use resume analysis to improve match quality</small>
+        </article>
+        <article class="summary-stat">
+            <div class="summary-stat__icon"><i class="fa-solid fa-bolt"></i></div>
+            <span>Quick Apply Flow</span>
+            <strong>Fast</strong>
+            <small>Open details and apply with your latest analyzed resume</small>
+        </article>
+    </div>
+
+    <section class="jobs-board" data-animate>
+        {% for card in job_cards %}
+            {% set job = card.job %}
+            <article class="job-opportunity-card">
+                <div class="job-opportunity-card__header">
+                    <div>
+                        <div class="job-opportunity-card__eyebrow">
+                            <span class="pill">IRIS Match</span>
+                            {% if job.id in applied_job_ids %}
+                                <span class="pill pill-score">Applied</span>
+                            {% endif %}
+                        </div>
+                        <h3>{{ job.title }}</h3>
+                        <p>{{ card.preview }}</p>
+                    </div>
+                    <div class="job-opportunity-card__count">
+                        <strong>{{ job.applications|length }}</strong>
+                        <span>Applicants</span>
+                    </div>
                 </div>
-                <p>{{ job.description[:220] }}{% if job.description|length > 220 %}...{% endif %}</p>
-                <div class="action-row">
-                    <a class="button secondary" href="{{ url_for('user.job_detail', job_id=job.id) }}">View Details</a>
-                    {% if job.id in applied_job_ids %}
-                        <span class="chip success">Applied</span>
-                    {% endif %}
+
+                <div class="job-opportunity-card__skills">
+                    {% for skill in card.skills %}
+                        <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="job-opportunity-card__footer">
+                    <div class="job-opportunity-card__meta">
+                        <span><i class="fa-solid fa-building"></i> Employer role</span>
+                        <span><i class="fa-solid fa-clock"></i> Active listing</span>
+                    </div>
+                    <div class="page-actions">
+                        <a class="btn btn-secondary btn-sm" href="{{ url_for('user.job_detail', job_id=job.id) }}">View Details</a>
+                        {% if job.id in applied_job_ids %}
+                            <span class="chip-pill chip-pill-success">Application Sent</span>
+                        {% else %}
+                            <a class="btn btn-primary btn-sm" href="{{ url_for('user.job_detail', job_id=job.id) }}">Apply Now</a>
+                        {% endif %}
+                    </div>
                 </div>
             </article>
         {% else %}
-            <p class="muted">No jobs are live right now.</p>
+            <div class="empty-card">
+                <div class="empty-card__icon"><i class="fa-solid fa-briefcase"></i></div>
+                <h3>No jobs are live right now</h3>
+                <p class="text-secondary">New openings will appear here as soon as employers publish them to the IRIS portal.</p>
+            </div>
         {% endfor %}
-    </div>
+    </section>
 </section>
 {% endblock %}

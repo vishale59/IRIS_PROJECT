@@ -1,18 +1,117 @@
-<!-- Employer job form page. -->
 {% extends "base.html" %}
-{% set title = "Post Job | IRIS Job Portal" %}
+{% set title = "Post Job" if not job else "Edit Job" %}
+
 {% block content %}
-<section class="panel form-panel wide">
-    <p class="eyebrow">Job management</p>
-    <h1>{% if job %}Edit Job{% else %}Post a New Job{% endif %}</h1>
-    <form method="post" class="form-grid">
-        <label>Job Title
-            <input type="text" name="title" value="{{ job.title if job else '' }}" placeholder="Senior Python Developer" required>
-        </label>
-        <label>Description
-            <textarea name="description" rows="10" placeholder="Describe the role, responsibilities, and required skills." required>{{ job.description if job else '' }}</textarea>
-        </label>
-        <button type="submit" class="button">{% if job %}Save Changes{% else %}Publish Job{% endif %}</button>
-    </form>
+<section class="dashboard-overview">
+    <div class="dashboard-heading" data-animate>
+        <div>
+            <span class="eyebrow">Job publishing</span>
+            <h2>{% if job %}Refine this role and keep the listing market-ready.{% else %}Create a premium job listing that attracts stronger candidates.{% endif %}</h2>
+            <p>{% if job %}Update the role details below to improve clarity, candidate fit, and application quality.{% else %}Write a clear title, describe the opportunity well, and publish a polished listing into your employer workspace.{% endif %}</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('employer.dashboard') }}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <article class="form-card" data-animate>
+            <div class="panel-head mb-3">
+                <div>
+                    <span class="eyebrow">Role details</span>
+                    <h3 class="h3">{% if job %}Edit job information{% else %}New job posting{% endif %}</h3>
+                </div>
+                <span class="metric-badge">Employer workspace</span>
+            </div>
+
+            <form method="post" class="form-card__grid">
+                <div class="form-section">
+                    <label class="form-label" for="title">Job Title</label>
+                    <input id="title" type="text" name="title" class="form-control" value="{{ job.title if job else '' }}" placeholder="Senior Python Backend Engineer" required>
+                    <p class="input-helper">Use a clear, industry-standard title so candidates can instantly understand the role.</p>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="description">Job Description</label>
+                    <textarea id="description" name="description" rows="10" class="form-control" placeholder="Describe responsibilities, must-have skills, tools, team context, and what success looks like in this role." required>{{ job.description if job else '' }}</textarea>
+                    <p class="input-helper">Stronger descriptions usually cover responsibilities, required skills, preferred experience, and the role impact.</p>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        {% if job %}Save Changes{% else %}Publish Job{% endif %}
+                    </button>
+                    <a class="btn btn-secondary btn-lg" href="{{ url_for('employer.dashboard') }}">Cancel</a>
+                </div>
+            </form>
+        </article>
+
+        <aside class="dashboard-sidebar">
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">Writing tips</span>
+                        <h3 class="h3">Make the listing stronger</h3>
+                    </div>
+                </div>
+                <div class="top-jobs">
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Lead with clarity</strong>
+                            <p class="text-secondary mb-0">Keep the title concise and aligned with real hiring keywords.</p>
+                        </div>
+                    </div>
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Be specific about skills</strong>
+                            <p class="text-secondary mb-0">Mention core technologies, responsibilities, and expectations early.</p>
+                        </div>
+                    </div>
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Show candidate value</strong>
+                            <p class="text-secondary mb-0">Highlight growth, impact, and the kind of work the hire will own.</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">Publishing checklist</span>
+                        <h3 class="h3">Before you submit</h3>
+                    </div>
+                </div>
+                <div class="activity-list">
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="activity-row__content">
+                            <strong>Readable title</strong>
+                            <p>Use naming candidates actively search for.</p>
+                        </div>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="activity-row__content">
+                            <strong>Detailed responsibilities</strong>
+                            <p>Explain what the person will actually do day to day.</p>
+                        </div>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="activity-row__content">
+                            <strong>Relevant skills listed</strong>
+                            <p>Include tools, frameworks, and domain requirements.</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </aside>
+    </div>
 </section>
 {% endblock %}

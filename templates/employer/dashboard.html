@@ -1,42 +1,46 @@
-<!-- Employer dashboard page. -->
 {% extends "base.html" %}
 {% set title = "Employer Dashboard | IRIS Job Portal" %}
 {% block content %}
-<section class="dashboard-grid">
-    <article class="panel hero-panel">
-        <p class="eyebrow">Hiring dashboard</p>
-        <h1>Welcome, {{ session.get('username') }}.</h1>
-        <p>Manage open roles and review the strongest applicants in one place.</p>
-        <div class="chip-row">
-            <span class="chip">Jobs {{ jobs|length }}</span>
-            <span class="chip">Applications {{ application_total }}</span>
+<section class="page-header-card mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <span class="eyebrow">Hiring dashboard</span>
+            <h1 class="display-6 fw-bold mb-2">Welcome, {{ session.get('username') }}.</h1>
+            <p class="text-secondary mb-0">Manage job postings and review applicant quality from a single dashboard.</p>
         </div>
-    </article>
-    <article class="panel">
-        <h2>Quick Actions</h2>
-        <div class="action-row">
-            <a class="button" href="{{ url_for('employer.post_job') }}">Post a Job</a>
+        <div class="col-lg-4">
+            <div class="row g-3">
+                <div class="col-6"><div class="metric-tile"><small>Jobs</small><strong>{{ jobs|length }}</strong></div></div>
+                <div class="col-6"><div class="metric-tile"><small>Applications</small><strong>{{ application_total }}</strong></div></div>
+            </div>
         </div>
-    </article>
+    </div>
 </section>
 
-<section class="panel">
-    <div class="section-head">
-        <h2>Your Jobs</h2>
-    </div>
-    <div class="card-list">
-        {% for job in jobs %}
-            <article class="job-card">
-                <h3>{{ job.title }}</h3>
-                <p>{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
-                <div class="action-row">
-                    <a class="button secondary" href="{{ url_for('employer.edit_job', job_id=job.id) }}">Edit</a>
-                    <a class="button secondary" href="{{ url_for('employer.applicants', job_id=job.id) }}">Applicants</a>
+<div class="d-flex justify-content-end mb-4">
+    <a class="btn btn-primary btn-lg rounded-pill" href="{{ url_for('employer.post_job') }}">Post a Job</a>
+</div>
+
+<div class="row g-4">
+    {% for job in jobs %}
+        <div class="col-lg-6">
+            <article class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <h2 class="h4">{{ job.title }}</h2>
+                    <p class="text-secondary">{{ job.description[:180] }}{% if job.description|length > 180 %}...{% endif %}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-primary rounded-pill" href="{{ url_for('employer.edit_job', job_id=job.id) }}">Edit</a>
+                        <a class="btn btn-outline-primary rounded-pill" href="{{ url_for('employer.applicants', job_id=job.id) }}">Applicants</a>
+                    </div>
                 </div>
             </article>
-        {% else %}
-            <p class="muted">You have not posted any jobs yet.</p>
-        {% endfor %}
-    </div>
-</section>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-secondary">You have not posted any jobs yet.</div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
 {% endblock %}

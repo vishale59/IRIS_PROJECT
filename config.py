@@ -1,6 +1,7 @@
 """Application configuration for the IRIS Job Portal."""
 
 import os
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 
@@ -10,24 +11,34 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def _build_database_uri() -> str:
-    """Build a SQLAlchemy connection string from environment variables."""
-    explicit_uri = os.getenv("DATABASE_URL")
-    if explicit_uri:
-        return explicit_uri
-
-    if os.getenv("USE_SQLITE_FALLBACK", "true").lower() == "true":
-        return os.getenv(
-            "SQLITE_DATABASE_URI",
-            f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'iris_job_portal.db')}",
-        )
-
-    db_driver = os.getenv("DB_DRIVER", "mysql+pymysql")
-    db_user = os.getenv("DB_USER", "root")
-    db_password = os.getenv("DB_PASSWORD", "password")
+    """Build a MySQL SQLAlchemy connection string from environment variables."""
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD", "")
     db_host = os.getenv("DB_HOST", "localhost")
     db_port = os.getenv("DB_PORT", "3306")
-    db_name = os.getenv("DB_NAME", "iris_job_portal")
-    return f"{db_driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    db_name = os.getenv("DB_NAME")
+
+    if not db_user or not db_name:
+        raise RuntimeError(
+            "MySQL configuration is incomplete. Set DB_USER and DB_NAME."
+        )
+
+    return (
+        "mysql+pymysql://"
+        f"{quote_plus(db_user)}:{quote_plus(db_password)}@{db_host}:{db_port}/{db_name}"
+    )
+
+
+def mask_database_uri(uri: str) -> str:
+    """Hide the password when printing the active SQLAlchemy URI."""
+    if "@" not in uri or "://" not in uri:
+        return uri
+    scheme, rest = uri.split("://", 1)
+    credentials, host_part = rest.split("@", 1)
+    if ":" not in credentials:
+        return uri
+    username, _password = credentials.split(":", 1)
+    return f"{scheme}://{username}:***@{host_part}"
 
 
 class Config:

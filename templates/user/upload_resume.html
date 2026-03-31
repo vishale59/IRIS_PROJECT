@@ -1,16 +1,117 @@
-<!-- Resume upload page for users. -->
 {% extends "base.html" %}
-{% set title = "Upload Resume | IRIS Job Portal" %}
+{% set title = "Resume Analysis" %}
+
 {% block content %}
-<section class="panel form-panel wide">
-    <p class="eyebrow">Resume upload</p>
-    <h1>Upload your resume for AI analysis.</h1>
-    <p class="muted">Accepted formats: PDF, DOC, and DOCX.</p>
-    <form method="post" enctype="multipart/form-data" class="form-grid">
-        <label>Resume File
-            <input type="file" name="resume" accept=".pdf,.doc,.docx" required>
-        </label>
-        <button type="submit" class="button">Upload and Analyze</button>
-    </form>
+<section class="dashboard-overview">
+    <div class="dashboard-heading" data-animate>
+        <div>
+            <span class="eyebrow">Resume analysis lab</span>
+            <h2>Upload your resume and turn it into a stronger, more ATS-ready profile.</h2>
+            <p>IRIS extracts content, evaluates keyword strength, and prepares your resume for better job matching inside a cleaner candidate workflow.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('user.dashboard') }}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <article class="form-card" data-animate>
+            <div class="panel-head mb-3">
+                <div>
+                    <span class="eyebrow">Upload resume</span>
+                    <h3 class="h3">Submit a PDF, DOC, or DOCX file</h3>
+                </div>
+                <span class="metric-badge">ATS scoring enabled</span>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="form-card__grid">
+                <div class="form-section">
+                    <label class="form-label" for="resume">Resume File</label>
+                    <label class="file-dropzone" for="resume">
+                        <span class="file-dropzone__icon"><i class="fa-solid fa-file-arrow-up"></i></span>
+                        <span class="file-dropzone__title">Drag and drop your resume or click to browse</span>
+                        <span class="file-dropzone__meta">Accepted formats: PDF, DOC, DOCX</span>
+                        <span class="file-dropzone__name" data-file-name>No file selected yet</span>
+                    </label>
+                    <input id="resume" type="file" name="resume" class="file-input" accept=".pdf,.doc,.docx" required data-file-input>
+                    <p class="input-helper">Your file will be analyzed for keyword relevance, score, and job matching readiness.</p>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        Upload and Analyze
+                    </button>
+                    <a class="btn btn-secondary btn-lg" href="{{ url_for('user.job_listings') }}">Explore Jobs</a>
+                </div>
+            </form>
+        </article>
+
+        <aside class="dashboard-sidebar">
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">What happens next</span>
+                        <h3 class="h3">Analysis workflow</h3>
+                    </div>
+                </div>
+                <div class="activity-list">
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-upload"></i></div>
+                        <div class="activity-row__content">
+                            <strong>1. Upload securely</strong>
+                            <p>Your document is stored and prepared for parsing.</p>
+                        </div>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-brain"></i></div>
+                        <div class="activity-row__content">
+                            <strong>2. Extract and score</strong>
+                            <p>IRIS identifies text, keywords, and ATS-fit indicators.</p>
+                        </div>
+                    </div>
+                    <div class="activity-row">
+                        <div class="activity-row__icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <div class="activity-row__content">
+                            <strong>3. Improve your fit</strong>
+                            <p>Use the results to apply with stronger alignment to open roles.</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="activity-card" data-animate>
+                <div class="panel-head mb-2">
+                    <div>
+                        <span class="eyebrow">Best results</span>
+                        <h3 class="h3">Resume tips</h3>
+                    </div>
+                </div>
+                <div class="top-jobs">
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Use real job keywords</strong>
+                            <p class="text-secondary mb-0">Mention tools, frameworks, and domain skills clearly.</p>
+                        </div>
+                    </div>
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Keep formatting readable</strong>
+                            <p class="text-secondary mb-0">Simple structure improves parsing quality and clarity.</p>
+                        </div>
+                    </div>
+                    <div class="top-jobs__row">
+                        <div>
+                            <strong>Highlight outcomes</strong>
+                            <p class="text-secondary mb-0">Show measurable impact instead of only responsibilities.</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </aside>
+    </div>
 </section>
 {% endblock %}

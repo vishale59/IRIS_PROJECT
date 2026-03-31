@@ -1,24 +1,23 @@
 """
 IRIS Email Notification Service
 """
-from flask import current_app, render_template_string
+from flask import current_app
 from flask_mail import Mail, Message
 
 mail = Mail()
 
 
 def _send(subject: str, recipients: list, html: str):
-    """Internal helper — silently fails if mail not configured."""
+    """Internal helper that skips delivery when mail is not configured."""
     try:
-        if not current_app.config.get('MAIL_USERNAME'):
-            return  # mail not configured; skip silently
+        if not current_app.config.get("MAIL_USERNAME"):
+            return
         msg = Message(subject=subject, recipients=recipients, html=html)
         mail.send(msg)
-    except Exception as e:
-        current_app.logger.warning(f"[MAIL] Failed to send email: {e}")
+    except Exception as exc:
+        current_app.logger.warning(f"[MAIL] Failed to send email: {exc}")
 
 
-# ── Email Templates ───────────────────────────────────────────────────────────
 _BASE = """
 <div style="font-family:Poppins,sans-serif;max-width:600px;margin:auto;background:#f9fafb;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:32px;text-align:center">
@@ -35,66 +34,84 @@ _BASE = """
 """
 
 
+def _display_name(user) -> str:
+    return getattr(user, "full_name", None) or getattr(user, "username", "User")
+
+
+def _job_company(job) -> str:
+    employer = getattr(job, "employer", None)
+    return getattr(job, "company", None) or getattr(employer, "username", "Employer")
+
+
+def _job_meta(job) -> str:
+    parts = [getattr(job, "location", None), getattr(job, "job_type", None)]
+    return " | ".join(part for part in parts if part)
+
+
 def notify_application_received(applicant, job, employer_email: str):
+    applicant_name = _display_name(applicant)
+    company = _job_company(job)
+    meta = _job_meta(job) or "IRIS Job Portal"
     body = f"""
-      <h2 style="color:#1e293b">New Application Received 📬</h2>
-      <p style="color:#475569">Hi <strong>{job.company}</strong>,</p>
+      <h2 style="color:#1e293b">New Application Received</h2>
+      <p style="color:#475569">Hi <strong>{company}</strong>,</p>
       <p style="color:#475569">
-        <strong>{applicant.full_name}</strong> has applied for your job posting:
+        <strong>{applicant_name}</strong> has applied for your job posting:
       </p>
       <div style="background:#f0f9ff;border-left:4px solid #2563eb;padding:16px;border-radius:8px;margin:16px 0">
         <strong style="color:#1e293b">{job.title}</strong><br>
-        <span style="color:#64748b">{job.location} · {job.job_type}</span>
+        <span style="color:#64748b">{meta}</span>
       </div>
       <p style="color:#475569">Log in to your employer dashboard to review the application.</p>
-      <a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px">View Application</a>
     """
     _send(
-        subject=f"New Application: {job.title} — {applicant.full_name}",
+        subject=f"New Application: {job.title} - {applicant_name}",
         recipients=[employer_email],
         html=_BASE.format(body=body),
     )
 
 
 def notify_application_submitted(applicant_email: str, applicant_name: str, job):
+    company = _job_company(job)
+    meta = _job_meta(job)
+    details = company if not meta else f"{company} | {meta}"
     body = f"""
-      <h2 style="color:#1e293b">Application Submitted ✅</h2>
+      <h2 style="color:#1e293b">Application Submitted</h2>
       <p style="color:#475569">Hi <strong>{applicant_name}</strong>,</p>
-      <p style="color:#475569">Your application has been successfully submitted!</p>
+      <p style="color:#475569">Your application has been successfully submitted.</p>
       <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:16px;border-radius:8px;margin:16px 0">
         <strong style="color:#1e293b">{job.title}</strong><br>
-        <span style="color:#64748b">{job.company} · {job.location}</span>
+        <span style="color:#64748b">{details}</span>
       </div>
-      <p style="color:#475569">We'll notify you when the employer reviews your application. Good luck! 🤞</p>
     """
     _send(
-        subject=f"Application Submitted — {job.title} at {job.company}",
+        subject=f"Application Submitted - {job.title} at {company}",
         recipients=[applicant_email],
         html=_BASE.format(body=body),
     )
 
 
 def notify_status_change(applicant_email: str, applicant_name: str, job, new_status: str):
+    company = _job_company(job)
     status_styles = {
-        'shortlisted': ('#f0fdf4', '#16a34a', '🎉 Shortlisted!'),
-        'rejected':    ('#fff1f2', '#dc2626', 'Application Update'),
-        'hired':       ('#fefce8', '#d97706', '🎊 Offer Extended!'),
-        'reviewed':    ('#eff6ff', '#2563eb', 'Application Reviewed'),
+        "shortlisted": ("#f0fdf4", "#16a34a", "Shortlisted"),
+        "rejected": ("#fff1f2", "#dc2626", "Application Update"),
+        "hired": ("#fefce8", "#d97706", "Offer Extended"),
+        "reviewed": ("#eff6ff", "#2563eb", "Application Reviewed"),
     }
-    bg, border, label = status_styles.get(new_status, ('#f8fafc', '#64748b', 'Status Update'))
+    bg, border, label = status_styles.get(new_status, ("#f8fafc", "#64748b", "Status Update"))
 
     body = f"""
       <h2 style="color:#1e293b">{label}</h2>
       <p style="color:#475569">Hi <strong>{applicant_name}</strong>,</p>
       <p style="color:#475569">Your application status has been updated:</p>
       <div style="background:{bg};border-left:4px solid {border};padding:16px;border-radius:8px;margin:16px 0">
-        <strong style="color:#1e293b">{job.title}</strong> at <strong>{job.company}</strong><br>
+        <strong style="color:#1e293b">{job.title}</strong> at <strong>{company}</strong><br>
         <span style="color:{border};font-weight:600;text-transform:capitalize">Status: {new_status}</span>
       </div>
-      <p style="color:#475569">Log in to your dashboard to view details.</p>
     """
     _send(
-        subject=f"Application Update — {job.title} at {job.company}",
+        subject=f"Application Update - {job.title} at {company}",
         recipients=[applicant_email],
         html=_BASE.format(body=body),
     )

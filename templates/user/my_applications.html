@@ -1,39 +1,38 @@
-<!-- User applications page. -->
 {% extends "base.html" %}
 {% set title = "My Applications | IRIS Job Portal" %}
 {% block content %}
-<section class="panel">
-    <div class="section-head">
-        <div>
-            <p class="eyebrow">Application history</p>
-            <h1>My Applications</h1>
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <div class="mb-3">
+            <span class="eyebrow">Application history</span>
+            <h1 class="h2 mb-0">My Applications</h1>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Resume Path</th>
+                        <th>Score</th>
+                        <th>Applied</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                        <tr>
+                            <td>{{ application.job.title }}</td>
+                            <td class="text-secondary">{{ application.resume_path }}</td>
+                            <td>{{ application.score }}%</td>
+                            <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-secondary">No applications submitted yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Job</th>
-                    <th>Resume Path</th>
-                    <th>Score</th>
-                    <th>Applied</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for application in applications %}
-                    <tr>
-                        <td>{{ application.job.title }}</td>
-                        <td>{{ application.resume_path }}</td>
-                        <td>{{ application.score }}%</td>
-                        <td>{{ application.applied_at.strftime('%d %b %Y') }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="4">No applications submitted yet.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+</div>
 {% endblock %}

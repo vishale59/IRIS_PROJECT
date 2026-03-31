@@ -1,44 +1,43 @@
-<!-- Admin jobs management page. -->
 {% extends "base.html" %}
 {% set title = "Manage Jobs | IRIS Job Portal" %}
 {% block content %}
-<section class="panel">
-    <div class="section-head">
-        <div>
-            <p class="eyebrow">Administration</p>
-            <h1>Manage Jobs</h1>
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <div class="mb-3">
+            <span class="eyebrow">Administration</span>
+            <h1 class="h2 mb-0">Manage Jobs</h1>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Employer</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td>{{ job.title }}</td>
+                            <td>{{ job.employer.username }}</td>
+                            <td>{{ job.created_at.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <form method="post">
+                                    <input type="hidden" name="job_id" value="{{ job.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-secondary">No jobs found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Employer</th>
-                    <th>Created</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for job in jobs %}
-                    <tr>
-                        <td>{{ job.title }}</td>
-                        <td>{{ job.employer.username }}</td>
-                        <td>{{ job.created_at.strftime('%d %b %Y') }}</td>
-                        <td>
-                            <form method="post">
-                                <input type="hidden" name="job_id" value="{{ job.id }}">
-                                <button type="submit" class="button danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="4">No jobs found.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+</div>
 {% endblock %}

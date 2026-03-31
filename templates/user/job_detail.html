@@ -1,26 +1,31 @@
-<!-- Individual job detail page. -->
 {% extends "base.html" %}
 {% set title = "Job Detail | IRIS Job Portal" %}
 {% block content %}
-<section class="panel detail-panel">
-    <p class="eyebrow">Job detail</p>
-    <h1>{{ job.title }}</h1>
-    <p class="lead">{{ job.description }}</p>
-    {% if latest_resume %}
-        <div class="chip-row">
-            <span class="chip">Latest Resume: {{ latest_resume.original_name }}</span>
-            <span class="chip">Resume Score: {{ latest_resume.score }}%</span>
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4 p-lg-5">
+                <span class="eyebrow">Job detail</span>
+                <h1 class="display-6 fw-bold mb-3">{{ job.title }}</h1>
+                <p class="lead text-secondary">{{ job.description }}</p>
+                {% if latest_resume %}
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <span class="chip-pill">Latest Resume: {{ latest_resume.original_name }}</span>
+                        <span class="chip-pill">Resume Score: {{ latest_resume.score }}%</span>
+                    </div>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-3">
+                    {% if has_applied %}
+                        <span class="chip-pill chip-pill-success">Application submitted</span>
+                    {% else %}
+                        <form method="post" action="{{ url_for('user.apply_job', job_id=job.id) }}">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill">Apply Now</button>
+                        </form>
+                    {% endif %}
+                    <a class="btn btn-outline-primary btn-lg rounded-pill" href="{{ url_for('user.job_listings') }}">Back to Jobs</a>
+                </div>
+            </div>
         </div>
-    {% endif %}
-    <div class="action-row">
-        {% if has_applied %}
-            <span class="chip success">Application submitted</span>
-        {% else %}
-            <form method="post" action="{{ url_for('user.apply_job', job_id=job.id) }}">
-                <button type="submit" class="button">Apply Now</button>
-            </form>
-        {% endif %}
-        <a class="button secondary" href="{{ url_for('user.job_listings') }}">Back to Jobs</a>
     </div>
-</section>
+</div>
 {% endblock %}
